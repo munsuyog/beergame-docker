@@ -1,0 +1,111 @@
+{
+    "team_name": "RootBeerGame",
+    "admin_password": "admin",
+    "play_password": "play",
+    "weeks": 20,
+    "expiry": 120,
+    "turn_time": 180,
+    "quick_backorder_recovery": true,
+    "script": [
+                {"week":1,"msg":"Welcome to the BEER GAME!!!"},
+                {"week":20,"msg":"Congratulations! You are about to complete your game."}
+              ],
+    "demands": [{
+          "name": "Consumer",
+          "demand": [4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
+    }],
+    "stations": [{
+                "name": "Manufacturer",
+                "player_name": "DemoPlayer",
+                "auto_decide_ship_qty": true,
+                "auto_decide_order_qty": false,
+                "holding_cost": 1,
+                "backorder_cost": 2,
+                "transport_cost": 0,
+                "transport_size": 100000,
+                "delay_shipping": 2,
+                "delay_ordering": 2,
+                "initial_queue_quantity": 4,
+                "initial_inventory": 4,
+                "safety_stock": 0,
+                "order_min": [],
+                "order_max": [],
+                "ship_min": [],
+                "ship_max": []
+          },
+          {
+                "name": "Distributor",
+                "player_name": "cpu",
+                "auto_decide_ship_qty": true,
+                "auto_decide_order_qty": true,
+                "holding_cost": 1,
+                "backorder_cost": 2,
+                "transport_cost": 0,
+                "transport_size": 100000,
+                "delay_shipping": 2,
+                "delay_ordering": 2,
+                "initial_queue_quantity": 4,
+                "initial_inventory": 4,
+                "safety_stock": 0,
+                "order_min": [],
+                "order_max": [],
+                "ship_min": [],
+                "ship_max": []
+          },
+          {
+                "name": "Wholesaler",
+                "player_name": "cpu",
+                "auto_decide_ship_qty": true,
+                "auto_decide_order_qty": true,
+                "holding_cost": 1,
+                "backorder_cost": 2,
+                "transport_cost": 0,
+                "transport_size": 100000,
+                "delay_shipping": 2,
+                "delay_ordering": 2,
+                "initial_queue_quantity": 4,
+                "initial_inventory": 4,
+                "safety_stock": 0,
+                "order_min": [],
+                "order_max": [],
+                "ship_min": [],
+                "ship_max": []
+          },
+          {
+                "name": "Retailer",
+                "player_name": "cpu",
+                "auto_decide_ship_qty": true,
+                "auto_decide_order_qty": true,
+                "holding_cost": 1,
+                "backorder_cost": 2,
+                "transport_cost": 0,
+                "transport_size": 100000,
+                "delay_shipping": 2,
+                "delay_ordering": 2,
+                "initial_queue_quantity": 4,
+                "initial_inventory": 4,
+                "safety_stock": 0,
+                "order_min": [],
+                "order_max": [],
+                "ship_min": [],
+                "ship_max": []
+          }
+    ],
+    "connections": [{
+                "supp": "Manufacturer",
+                "cust": "Distributor"
+          },
+          {
+                "supp": "Distributor",
+                "cust": "Wholesaler"
+          },
+          {
+                "supp": "Wholesaler",
+                "cust": "Retailer"
+          },
+          {
+                "supp": "Retailer",
+                "cust": "Consumer"
+          }
+    ]
+}

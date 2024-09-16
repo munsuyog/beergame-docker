@@ -1,0 +1,11 @@
+{
+  "SECRET_KEY":"change to a random value and keep this really secret",
+  "GameStatusData":"test.dat",
+  "USERNAME":"admin",
+  "PASSWORD":"admin",
+  "MAX_GAMES_MONITORED":"10",
+  "SECONDSAWAY_TO_DISCONNECT":"10",
+  "SECONDS_TO_REFRESH_PLAY_SCREEN":"1",
+  "SECONDS_TO_REFRESH_GAME_MONITOR":"3",
+  "SECONDS_TO_REFRESH_GAME_DEBUG":"10"
+}

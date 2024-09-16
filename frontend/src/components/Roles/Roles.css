@@ -1,0 +1,30 @@
+.game-map-wholesaler {
+    position: absolute;
+    width: 120px;
+    height: auto;
+    bottom: 420px;
+    right: 300px;
+}
+.game-map-retailer {
+    position: absolute;
+    width: 144px;
+    height: auto;
+    bottom: 420px;
+    left: 100px;
+}
+.game-map-manufacturer {
+    position: absolute;
+    width: 144px;
+    height: auto;
+    top: 90px;
+    left: 130px;
+    z-index: 1;
+}
+.game-map-distributor {
+    position: absolute;
+    width: 144px;
+    height: auto;
+    top: 90px;
+    right: 200px;
+    z-index: 1;
+}

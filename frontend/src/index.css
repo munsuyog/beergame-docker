@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.custom-button {
+  border: 2px solid #3490dc; /* Blue border color */
+  border-radius: 50%; /* Makes the button circular */
+  height: 4rem; /* Adjust height */
+  width: 4rem; /* Adjust width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.custom-button:hover:not(:disabled) {
+  background-color: #3490dc; /* Blue background on hover */
+}
+
+.custom-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.custom-icon {
+  color: #3490dc; /* Blue color for the icon */
+  font-size: 1.5rem; /* Adjust icon size */
+  transition: color 0.3s ease;
+}
+
+.custom-button:hover:not(:disabled) .custom-icon {
+  color: #fff; /* White color for the icon on hover */
+}
+
+.Game{
+    background-image: url('./assets/Game/game.png');
+    background-repeat: no-repeat;
+    background-position: left;
+    background-size: contain;
+}
+
+.Boat{
+    background-image: url('./assets/Game/boat1.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size:contain;
+    transform: scale(0.8);
+}
+.Boat2{
+    background-image: url('./assets/Game/boat1.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size:contain;
+    transform: scale(0.8);
+    /* z-index: 999; */
+}
+
+
+
+.rotate-reset {
+    transform:  rotate(-16deg) scale(0.8);
+  }
+  
+.rotate-init {
+    transform:  rotate(-16deg) scale(0.8);
+  }
+
+  .rotate25 {
+    transform:  rotate(-25deg) scale(0.8);
+  }
+  
+  .rotate15 {
+    transform:  rotate(15deg) scale(0.8);
+  }
+
+  .rotate90 {
+    transform:  rotate(-90deg) scale(0.8);
+  }
+  .rotate-retailer {
+    transform: rotate(180deg) scale(1, -1);
+  }
+  .rotate-retailer p {
+    transform: rotate(180deg) scale(1, -1);
+    background: rgba(255,255,255, 0.8);
+    border-radius: 20px;
+    text-align: center;
+    width: 100%;
+    height: 30px;
+  }
+  
+  .rotate-distributor {
+    transform: rotate(90deg);
+  }
+  .rotate-wholesaler {
+    transform: rotate(180deg) scale(1, -1);
+    
+  }
+  .rotate-wholesaler p {
+    transform: rotate(180deg) scale(1, -1);
+    background: rgba(255,255,255, 0.8);
+    border-radius: 20px;
+    text-align: center;
+    width: 100%;
+    height: 30px;
+  }
+  .rotate-distributor p {
+    transform: rotate(-90deg);
+    top: 0px;
+    background: rgba(255,255,255, 0.8);
+    border-radius: 20px;
+    text-align: center;
+    width: 100%;
+    height: 30px;
+  }
+  .rotate-manufacturer p {
+    background: rgba(255,255,255, 0.8);
+    border-radius: 20px;
+    text-align: center;
+    width: 100%;
+    height: 30px;
+  }
+
+  .fixed-viewport-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+  }
+  
+  .fixed-viewport-content {
+    width: 1280px;  /* or your desired width */
+    height: 720px;  /* or your desired height */
+    background-color: white;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .game-container {
+    width: 1440px; /* Set your base width */
+    height: 800px; /* Set your base height */
+    position: relative;
+    overflow: hidden; /* Prevents any overflow issues */
+    background-color: #fafafa; /* Background color of your choice */
+  }
+  

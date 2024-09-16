@@ -1,0 +1,7 @@
+add comments to code
+server admin can manage games (multi-delete, and enter game admin with no password)
+end game? one possibility is via current week = end week??
+adding captcha (to istm.zu.ac ONLY) for create game and DEMO; https://www.google.com/recaptcha/intro/
+export/import game data to/from JSON file
+include automated testing
+check using Bandit: https://developer.rackspace.com/blog/getting-started-with-bandit/

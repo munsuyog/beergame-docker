@@ -1,0 +1,10 @@
+#game-map {
+    width: 900px;
+    height: 900px;
+    background-image: url('../../assets/Game/map.png');
+    background-color: #ddf6ff;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-origin: 0 0;
+    position: absolute;
+}

@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<HEAD>
+  <meta charset="UTF-8">
+  <meta name="description" content="The X-Supply Game (XSG) is an opensource educational simulation game used to help participants explore the dynamics of real supply chains">
+  <meta name="keywords" content="open source,beer game,free,supply chain game">
+  <meta name="author" content="Sinan Salman">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The X-Supply Game (XSG)</title>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-86962030-2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'UA-86962030-2');
+  </script>
+</HEAD>
+<body>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}{{ js_debug() }}">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type=text/javascript>
+    $SCRIPT_ROOT = {{ request.script_root | tojson | safe  }};
+  </script>
+  <div class=page>
+    <div class=headding>
+      <div class="xsg_title">
+      </div>
+      <div class=metanav>
+        <a href="javascript:history.back()" tabindex=-1>⇦ Go Back</a> &ensp;
+        <a href="{{ url_for('cmd',cmd='about') }}" tabindex=-1>About</a> &ensp;
+        {% if session.password %}
+          <a href="{{ url_for('cmd',cmd='logout') }}" tabindex=-1>Logout</a> &ensp;
+        {% endif %}
+        {% if session.player_name %}
+          <a href="{{ url_for('cmd',cmd='reset') }}" tabindex=-1>Home</a>
+        {% else %}
+          <a href="{{ url_for('index') }}" tabindex=-1>Home</a>
+        {% endif %}
+      </div>
+    </div>
+    {% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+    {% endfor %} {% block body %}{% endblock %}
+  </div>
+  <div class="ver">
+    <span class=version>ver 0.17</span>
+  </div>
+</body>
+</html>
