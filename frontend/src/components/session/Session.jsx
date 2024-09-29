@@ -59,8 +59,8 @@ const Session = () => {
 
   useEffect(() => {
     if (currentSession) {
-      dispatch(getSessionStatus(currentSession.id));
-      dispatch(getLobbyRolesStatus(currentSession.id));
+      dispatch(getSessionStatus(sessionId));
+      dispatch(getLobbyRolesStatus(sessionId));
     }
   }, [dispatch, currentSession]);
 

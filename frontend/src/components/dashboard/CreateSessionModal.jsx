@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { createSession } from "../../store/reducers/gameSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { createSession, getSessions } from "../../store/reducers/gameSlice";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaUsers, FaUserFriends } from "react-icons/fa";
 
@@ -9,13 +9,14 @@ const CreateSessionModal = ({ isOpen, onClose }) => {
   const [sessionName, setSessionName] = useState("");
   const [teams, setTeams] = useState(20);
   const [playersPerTeam, setPlayersPerTeam] = useState(4);
+  const user = useSelector((state) => state.user)
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const cleanedSessionName = sessionName.replace(/\s+/g, "");
     dispatch(createSession({
       name: cleanedSessionName,
-      userId: "currentUserId", // Replace with actual user ID
+      userId: user.user.email, // Replace with actual user ID
       teams,
       playersPerTeam
     }));

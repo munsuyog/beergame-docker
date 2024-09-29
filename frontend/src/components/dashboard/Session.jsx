@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 const Session = () => {
   const dispatch = useDispatch();
   const sessions = useSelector((state) => state.game.sessions);
+  const user = useSelector((state) => state.user);
   const loading = useSelector((state) => state.game.loading);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,7 +36,9 @@ const Session = () => {
     closeModal();
   };
 
-  const filteredSessions = sessions.filter((session) =>
+  const filteredSessions = sessions
+  .filter((session) => session.owner_id === user.user.email)
+  .filter((session) =>
     session.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

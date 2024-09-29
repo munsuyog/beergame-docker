@@ -4,7 +4,9 @@ from math import floor, ceil, inf
 import time
 import logging
 from flask import flash
-from beergame.firebase_config import db
+# from beergame.firebase_config import db
+from beergame.mongo_config import db
+import pymongo
 
 logger = logging.getLogger(__name__)
 
@@ -136,9 +138,9 @@ class Station():
         # preparing limits for display in player screen
         self.ordering_limits = list(zip(range(1,game.weeks+1),self.order_min,self.order_max))
         self.shipping_limits = list(zip(range(1,game.weeks+1),self.ship_min,self.ship_max))
-        self.save_to_firebase()
+        self.save_to_mongodb()
 
-    def save_to_firebase(self):
+    def save_to_mongodb(self):
         station_data = self.get_config()
         station_data.update({
             'inventory': self.inventory,
@@ -155,31 +157,66 @@ class Station():
             'kpi_truck_utilization': self.kpi_truck_utilization,
             'kpi_shipment_trucks': self.kpi_shipment_trucks
         })
-        db.collection('games').document(self.game.team_name).collection('stations').document(self.station_name).set(station_data)
-
+        try:
+            # First, retrieve the current game document
+            game_doc = db.games.find_one({'_id': self.game.team_name})
+            
+            if game_doc:
+                # If the game document exists, update the stations array
+                stations = game_doc.get('stations', [])
+                
+                # Find the index of the current station in the stations array
+                station_index = next((index for (index, d) in enumerate(stations) if d["name"] == self.station_name), None)
+                
+                if station_index is not None:
+                    # If the station exists, update it
+                    db.games.update_one(
+                        {'_id': self.game.team_name},
+                        {'$set': {f'stations.{station_index}': station_data}}
+                    )
+                else:
+                    # If the station doesn't exist, append it to the stations array
+                    db.games.update_one(
+                        {'_id': self.game.team_name},
+                        {'$push': {'stations': station_data}}
+                    )
+            else:
+                # If the game document doesn't exist, create it with the stations array
+                db.games.insert_one({
+                    '_id': self.game.team_name,
+                    'stations': [station_data]
+                })
+            
+        except pymongo.errors.PyMongoError as e:
+            logger.error(f"Error saving station to MongoDB: {str(e)}")
+            
     @classmethod
-    def load_from_firebase(cls, game, station_name):
-        station_doc = db.collection('games').document(game.team_name).collection('stations').document(station_name).get()
-        if station_doc.exists:
-            station_data = station_doc.to_dict()
-            station = cls(game, station_data)
-            station.inventory = station_data['inventory']
-            station.backorder = station_data['backorder']
-            station.received_po = station_data['received_po']
-            station.sent_po = station_data['sent_po']
-            station.inbound = station_data['inbound']
-            station.outbound = station_data['outbound']
-            station.kpi_weeklycost_inventory = station_data['kpi_weeklycost_inventory']
-            station.kpi_weeklycost_backorder = station_data['kpi_weeklycost_backorder']
-            station.kpi_weeklycost_transport = station_data['kpi_weeklycost_transport']
-            station.kpi_total_cost = station_data['kpi_total_cost']
-            station.kpi_fulfilment_rate = station_data['kpi_fulfilment_rate']
-            station.kpi_truck_utilization = station_data['kpi_truck_utilization']
-            station.kpi_shipment_trucks = station_data['kpi_shipment_trucks']
-            return station
-        return None
+    def load_from_mongodb(cls, game, station_name):
+        try:
+            game_data = db.games.find_one({'_id': game.team_name})
+            if game_data and 'stations' in game_data and station_name in game_data['stations']:
+                station_data = game_data['stations'][station_name]
+                station = cls(game, station_data)
+                station.inventory = station_data['inventory']
+                station.backorder = station_data['backorder']
+                station.received_po = station_data['received_po']
+                station.sent_po = station_data['sent_po']
+                station.inbound = station_data['inbound']
+                station.outbound = station_data['outbound']
+                station.kpi_weeklycost_inventory = station_data['kpi_weeklycost_inventory']
+                station.kpi_weeklycost_backorder = station_data['kpi_weeklycost_backorder']
+                station.kpi_weeklycost_transport = station_data['kpi_weeklycost_transport']
+                station.kpi_total_cost = station_data['kpi_total_cost']
+                station.kpi_fulfilment_rate = station_data['kpi_fulfilment_rate']
+                station.kpi_truck_utilization = station_data['kpi_truck_utilization']
+                station.kpi_shipment_trucks = station_data['kpi_shipment_trucks']
+                return station
+            return None
+        except pymongo.errors.PyMongoError as e:
+            logger.error(f"Error loading station from MongoDB: {str(e)}")
+            return None
 
-    def update_firebase(self):
+    def update_mongodb(self):
         station_data = {
             'inventory': self.inventory,
             'backorder': self.backorder,
@@ -195,8 +232,13 @@ class Station():
             'kpi_truck_utilization': self.kpi_truck_utilization,
             'kpi_shipment_trucks': self.kpi_shipment_trucks
         }
-        db.collection('games').document(self.game.team_name).collection('stations').document(self.station_name).update(station_data)
-
+        try:
+            db.games.update_one(
+                {'_id': self.game.team_name},
+                {'$set': {f'stations.{self.station_name}': station_data}}
+            )
+        except pymongo.errors.PyMongoError as e:
+            logger.error(f"Error updating station in MongoDB: {str(e)}")
 
     def reset(self):
         # initialize variables
@@ -494,7 +536,7 @@ class Station():
             self.kpi_truck_utilization[week] = (shipments/self.transport_size)/trucks
         else:
             self.kpi_truck_utilization[week] = 1
-        self.update_firebase()
+        self.update_mongodb()
 
 
 class Demand():

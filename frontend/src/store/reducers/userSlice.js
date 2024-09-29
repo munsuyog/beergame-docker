@@ -57,6 +57,7 @@ export const storeUserData = createAsyncThunk(
     try {
       const userDocRef = doc(firestore, role === 'student' ? 'students' : 'instructors', uid);
       const userData = {
+        uid,
         name,
         plan,
         email,

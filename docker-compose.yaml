@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -11,7 +9,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:5555
+      - VITE_API_URL=http://125.20.54.14:5555
     depends_on:
       - backend
 
@@ -23,7 +21,9 @@ services:
       - "5555:5555"
     volumes:
       - ./backend:/app
+      - ./backend/firebase-credentials.json:/app/firebase-credentials.json:ro
     environment:
       - FLASK_APP=beergame
       - FLASK_RUN_HOST=0.0.0.0
       - FLASK_ENV=development
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-credentials.json

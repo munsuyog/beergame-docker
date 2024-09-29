@@ -11,7 +11,7 @@ from beergame import game, app
 from flask import request, session, redirect, url_for, render_template, flash, jsonify, Response, send_from_directory
 import logging
 from logging.handlers import RotatingFileHandler
-from beergame.firebase_config import verify_id_token, db
+# from beergame.firebase_config import verify_id_token, db
 from flask_cors import CORS, cross_origin
 import math
 from beergame.session import Session
@@ -21,6 +21,9 @@ import datetime
 import signal
 import sys
 import beergame.game
+from beergame.mongo_config import db
+from bson.objectid import ObjectId
+import pymongo
 
 ################################################################################
 # Logging setup
@@ -180,27 +183,6 @@ def week_sum(D,week):
     """ return a week's sum from a dictionary of lists of weekly values """
     return sum([x[week] for x in D.values()])
 
-@app.route('/signup', methods=['POST'])
-def signup():
-    id_token = request.headers['Authorization'].split(' ').pop()
-    user_info = verify_id_token(id_token)
-    
-    if user_info:
-        uid, role = user_info
-        return jsonify({'message': 'Sign-up successful', 'uid': uid, 'role': role}), 200
-    else:
-        return jsonify({'error': 'Invalid token'}), 401
-
-@app.route('/signin', methods=['POST'])
-def signin():
-    id_token = request.headers['Authorization'].split(' ').pop()
-    user_info = verify_id_token(id_token)
-    
-    if user_info:
-        uid, role = user_info
-        return jsonify({'message': 'Sign-in successful', 'uid': uid, 'role': role}), 200
-    else:
-        return jsonify({'error': 'Invalid token'}), 401
 ################################################################################
 # application views
 ################################################################################
@@ -214,12 +196,6 @@ def favicon():
 def robots():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'robots.txt', mimetype='text/plain')
-
-
-@app.route('/')
-@app.route('/index')
-def index():
-    return render_template('index.html')
 
 
 @app.route('/cmd/<cmd>')
@@ -1189,11 +1165,9 @@ def create_session():
         session_id = new_session.id
         logger.info(f"Created Session with ID: {session_id}")
 
-        batch = db.batch()
-
-        logger.info("Creating games for each team")
+        logger.info("Creating or updating games for each team")
         for i in range(num_teams):
-            logger.debug(f"Creating game {i+1} of {num_teams}")
+            logger.debug(f"Processing game {i+1} of {num_teams}")
             game_name = f"{session_name}_Team_{i+1}"
 
             # Create a deep copy of the template data
@@ -1201,7 +1175,7 @@ def create_session():
 
             # Update the game data with session-specific information
             game_data.update({
-                'id': game_name,
+                '_id': game_name,
                 'team_name': game_name,
                 'session_id': session_id,
                 'team_number': i + 1,
@@ -1214,19 +1188,14 @@ def create_session():
             logger.debug(f"Adding game {game_name} to session's game list")
             new_session.games.append(game_name)
 
-            logger.debug(f"Adding game {game_name} to batch")
-            game_ref = db.collection('games').document(game_name)
-            batch.set(game_ref, game_data)
+            logger.debug(f"Upserting game {game_name} in MongoDB")
+            db.games.update_one({'_id': game_name}, {'$set': game_data}, upsert=True)
 
-            logger.debug(f"Creating game instance in GAMES dictionary")
+            logger.debug(f"Creating or updating game instance in GAMES dictionary")
             GAMES[game_name] = game.Game(game_data)
 
-        logger.info("Saving session data to batch")
-        session_ref = db.collection('sessions').document(session_id)
-        batch.set(session_ref, new_session.to_dict())
-
-        logger.info("Committing batch write to Firestore")
-        batch.commit()
+        logger.info("Saving session data to MongoDB")
+        db.sessions.insert_one(new_session.to_dict())
 
         logger.info("Adding session to SESSIONS dictionary")
         SESSIONS[session_id] = new_session
@@ -1238,67 +1207,91 @@ def create_session():
             'num_games_created': num_teams
         }), 201
 
+    except pymongo.errors.PyMongoError as e:
+        logger.exception(f"A MongoDB error occurred: {str(e)}")
+        return jsonify({'error': f'A database error occurred: {str(e)}'}), 500
     except Exception as e:
         logger.exception(f"An error occurred: {str(e)}")
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-
-
-
 # Helper function to create a game
 def create_game(game_config):
-    game_id = str(uuid.uuid4())
+    try:
+        game_id = str(uuid.uuid4())
+        
+        # Default game configuration
+        default_config = {
+            'team_name': game_config['team_name'],
+            'play_password': game_config['play_password'],
+            'admin_password': game_config['admin_password'],
+            'weeks': 52,  # Default to 52 weeks, adjust as needed
+            'turn_time': 300,  # Default to 300 seconds, adjust as needed
+            'expiry': 7,  # Default to 7 days, adjust as needed
+            'demands': [
+                {
+                    'station_name': 'Customer',
+                    'demand': [10] * 52,  # Default demand of 10 for each week
+                    'auto_decide_po_qty': True
+                }
+            ],
+            'stations': [
+                {
+                    'station_name': 'Manufacturer',
+                    'inventory': 0,
+                    'order_max': [100] * 52,
+                    'order_min': [0] * 52,
+                    'ship_max': [100] * 52,
+                    'ship_min': [0] * 52,
+                    'holding_cost': 1,
+                    'backorder_cost': 2,
+                    'transport_cost': 10,
+                    'transport_size': 5,
+                    'delay_shipping': 1,
+                    'delay_ordering': 2,
+                    'auto_decide_order_qty': False,
+                    'auto_decide_ship_qty': False
+                }
+            ],
+            'connections': [
+                {
+                    'supp': 'Manufacturer',
+                    'cust': 'Customer'
+                }
+            ],
+            'script': []  # Add game events/scripts if needed
+        }
+        
+        # Merge the provided config with the default config
+        full_config = {**default_config, **game_config}
+        
+        # Add the game_id as _id for MongoDB
+        full_config['_id'] = game_id
+        
+        # Create game instance
+        GAMES[game_id] = game.Game(full_config)
+        
+        # Save game to MongoDB
+        result = db.games.insert_one(full_config)
+        
+        if result.inserted_id:
+            logger.info(f"Game {game_id} created and saved to MongoDB")
+            return game_id
+        else:
+            logger.error(f"Failed to save game {game_id} to MongoDB")
+            del GAMES[game_id]  # Remove from memory if database insert failed
+            return None
+
+    except pymongo.errors.PyMongoError as e:
+        logger.error(f"MongoDB error occurred while creating game: {str(e)}")
+        if game_id in GAMES:
+            del GAMES[game_id]  # Remove from memory if database insert failed
+        return None
+
+    except Exception as e:
+        logger.error(f"Error occurred while creating game: {str(e)}")
+        if game_id in GAMES:
+            del GAMES[game_id]  # Remove from memory if an error occurred
+        return None
     
-    # Default game configuration
-    default_config = {
-        'team_name': game_config['team_name'],
-        'play_password': game_config['play_password'],
-        'admin_password': game_config['admin_password'],
-        'weeks': 52,  # Default to 52 weeks, adjust as needed
-        'turn_time': 300,  # Default to 300 seconds, adjust as needed
-        'expiry': 7,  # Default to 7 days, adjust as needed
-        'demands': [
-            {
-                'station_name': 'Customer',
-                'demand': [10] * 52,  # Default demand of 10 for each week
-                'auto_decide_po_qty': True
-            }
-        ],
-        'stations': [
-            {
-                'station_name': 'Manufacturer',
-                'inventory': 0,
-                'order_max': [100] * 52,
-                'order_min': [0] * 52,
-                'ship_max': [100] * 52,
-                'ship_min': [0] * 52,
-                'holding_cost': 1,
-                'backorder_cost': 2,
-                'transport_cost': 10,
-                'transport_size': 5,
-                'delay_shipping': 1,
-                'delay_ordering': 2,
-                'auto_decide_order_qty': False,
-                'auto_decide_ship_qty': False
-            }
-        ],
-        'connections': [
-            {
-                'supp': 'Manufacturer',
-                'cust': 'Customer'
-            }
-        ],
-        'script': []  # Add game events/scripts if needed
-    }
-    
-    # Merge the provided config with the default config
-    full_config = {**default_config, **game_config}
-    
-    GAMES[game_id] = game.Game(full_config)
-    
-    # Save game to Firestore
-    db.collection('games').document(game_id).set(full_config)
-    
-    return game_id
 # Get all sessions
 @app.route('/get_sessions', methods=['GET'])
 @cross_origin()
@@ -1317,26 +1310,88 @@ def join_session():
     if not session_id or not player_uid:
         return jsonify({'error': 'Missing session_id or player_uid'}), 400
 
-    if session_id not in SESSIONS:
-        return jsonify({'error': 'Session not found'}), 404
+    try:
+        # Try to get the session from memory first
+        if session_id in SESSIONS:
+            session = SESSIONS[session_id]
+        else:
+            # If not in memory, try to fetch from MongoDB
+            session_data = db.sessions.find_one({'_id': session_id})
+            if not session_data:
+                return jsonify({'error': 'Session not found'}), 404
+            
+            # Create a Session object from the database data
+            session = Session(
+                session_data['name'],
+                session_data['owner_id'],
+                session_data['num_teams']
+            )
+            session.id = session_id
+            session.games = session_data['games']
+            session.players = set(session_data['players'])
+            
+            # Add to memory
+            SESSIONS[session_id] = session
 
-    session = SESSIONS[session_id]
-    session.players.add(player_uid)
+        # Add the player to the session
+        session.players.add(player_uid)
 
-    # Update session in Firestore
-    db.collection('sessions').document(session_id).update({'players': list(session.players)})
+        # Update session in MongoDB
+        result = db.sessions.update_one(
+            {'_id': session_id},
+            {'$addToSet': {'players': player_uid}}
+        )
 
-    return jsonify({'message': 'Joined session successfully'}), 200
+        if result.modified_count == 0 and result.matched_count == 0:
+            return jsonify({'error': 'Failed to update session'}), 500
 
+        return jsonify({'message': 'Joined session successfully'}), 200
+
+    except pymongo.errors.PyMongoError as e:
+        logger.exception(f"A MongoDB error occurred: {str(e)}")
+        return jsonify({'error': f'A database error occurred: {str(e)}'}), 500
+    except Exception as e:
+        logger.exception(f"An error occurred: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    
 # Get session details
 @app.route('/get_session/<session_id>', methods=['GET'])
 @cross_origin()
 def get_session(session_id):
-    if session_id not in SESSIONS:
-        return jsonify({'error': 'Session not found'}), 404
+    try:
+        # First, try to get the session from memory
+        if session_id in SESSIONS:
+            session = SESSIONS[session_id]
+            return jsonify(session.to_dict()), 200
 
-    session = SESSIONS[session_id]
-    return jsonify(session.to_dict()), 200
+        # If not in memory, try to fetch from MongoDB
+        session_data = db.sessions.find_one({'_id': session_id})
+        
+        if not session_data:
+            return jsonify({'error': 'Session not found'}), 404
+
+        # Create a Session object from the database data
+        session = Session(
+            session_data['name'],
+            session_data['owner_id'],
+            session_data['num_teams']
+        )
+        session.id = session_id
+        session.games = session_data['games']
+        session.players = set(session_data['players'])
+
+        # Add to memory for future use
+        SESSIONS[session_id] = session
+
+        return jsonify(session.to_dict()), 200
+
+    except pymongo.errors.PyMongoError as e:
+        logger.exception(f"A MongoDB error occurred: {str(e)}")
+        return jsonify({'error': f'A database error occurred: {str(e)}'}), 500
+    except Exception as e:
+        logger.exception(f"An error occurred: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    
 
 def monitor_games(session_id):
     try:
@@ -1402,28 +1457,31 @@ def monitor_games(session_id):
 def get_session_monitor(session_id):
     return monitor_games(session_id)
 
-# Load sessions from Firestore on server start
 def load_sessions():
-    logger.info("Loading sessions from Firestore")
-    sessions = db.collection('sessions').get()
-    for session_doc in sessions:
-        try:
-            session_data = session_doc.to_dict()
-            session = Session(
-                session_data['name'], 
-                session_data['owner_id'], 
-                session_data['num_teams']
-            )
-            session.id = session_data['id']
-            session.games = session_data['games']
-            session.players = set(session_data['players'])
-            SESSIONS[session.id] = session
-            
-            logger.info(f"Loaded session {session.id} with {len(session.games)} associated games")
-        except Exception as e:
-            logger.exception(f"Error loading session {session_doc.id}: {str(e)}")
+    logger.info("Loading sessions from MongoDB")
+    try:
+        sessions = db.sessions.find()
+        for session_data in sessions:
+            try:
+                session = Session(
+                    session_data['name'], 
+                    session_data['owner_id'], 
+                    session_data['num_teams']
+                )
+                session.id = str(session_data['_id'])  # MongoDB uses _id as the default identifier
+                session.games = session_data['games']
+                session.players = set(session_data['players'])
+                SESSIONS[session.id] = session
+                
+                logger.info(f"Loaded session {session.id} with {len(session.games)} associated games")
+            except Exception as e:
+                logger.exception(f"Error loading session {session_data['_id']}: {str(e)}")
 
-    logger.info(f"Loaded {len(SESSIONS)} sessions")
+        logger.info(f"Loaded {len(SESSIONS)} sessions")
+    except pymongo.errors.PyMongoError as e:
+        logger.exception(f"A MongoDB error occurred while loading sessions: {str(e)}")
+    except Exception as e:
+        logger.exception(f"An unexpected error occurred while loading sessions: {str(e)}")
 
 @app.route('/session/lobby/<session_id>', methods=['GET'])
 @cross_origin()
@@ -1515,7 +1573,7 @@ def change_session_game_settings():
                 # Create a deep copy of game settings for this specific game
                 game_specific_settings = copy.deepcopy(game_settings)
                 game_specific_settings['team_name'] = GAMES[game_id].team_name
-                game_specific_settings['id'] = game_id
+                game_specific_settings['_id'] = game_id  # Use _id for MongoDB
                 
                 # Create a new game object with the updated settings
                 new_game = game.Game(game_specific_settings)
@@ -1523,12 +1581,21 @@ def change_session_game_settings():
                 # Update the game in the GAMES dictionary
                 GAMES[game_id] = new_game
                 
-                # Update the game in Firestore
-                db.collection('games').document(game_id).set(new_game.get_config())
+                # Update the game in MongoDB
+                result = db.games.update_one(
+                    {'_id': game_id},
+                    {'$set': new_game.get_config()},
+                    upsert=True
+                )
                 
-                updated_games.append(game_id)
-                logger.info(f"Updated game: {game_id}")
-            
+                if result.modified_count > 0 or result.upserted_id:
+                    updated_games.append(game_id)
+                    logger.info(f"Updated game: {game_id}")
+                else:
+                    logger.warning(f"Game {game_id} was not updated in MongoDB")
+                
+            except pymongo.errors.PyMongoError as e:
+                logger.error(f"MongoDB error updating game {game_id}: {str(e)}")
             except Exception as e:
                 logger.error(f"Error updating game {game_id}: {str(e)}")
         
@@ -1540,13 +1607,18 @@ def change_session_game_settings():
             'updated_games': updated_games
         })
     
+    except pymongo.errors.PyMongoError as e:
+        logger.error(f"MongoDB error occurred while saving game setup for session {session_id}: {str(e)}", exc_info=True)
+        return jsonify({
+            'result': False,
+            'msg': f"Couldn't save game setup. Database error: {str(e)}."
+        }), 500
     except Exception as e:
         logger.error(f"Error occurred while saving game setup for session {session_id}: {str(e)}", exc_info=True)
         return jsonify({
             'result': False,
             'msg': f"Couldn't save game setup. Error: {str(e)}."
         }), 500
-    
     
 @app.route('/get_session_game_settings', methods=['GET'])
 @cross_origin()

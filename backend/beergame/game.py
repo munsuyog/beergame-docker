@@ -1,7 +1,8 @@
 # game.py
 from . import stations
 import time
-from beergame.firebase_config import db
+from beergame.mongo_config import db
+import pymongo
 
 
 def currency(value):
@@ -103,22 +104,27 @@ class Game(object):
 
         for x in self.network_walk:  # initialize the first week
             self.network_stations[x].initialize_week(0)
-        self.save_to_firebase()
+        self.save_to_mongodb()
 
-
-    def save_to_firebase(self):
+    def save_to_mongodb(self):
         game_data = self.get_config()
-        db.collection('games').document(self.team_name).set(game_data)
+        try:
+            db.games.update_one({'_id': self.team_name}, {'$set': game_data}, upsert=True)
+        except pymongo.errors.PyMongoError as e:
+            print(f"Error saving game to MongoDB: {str(e)}")
 
     @classmethod
-    def load_from_firebase(cls, team_name):
-        game_doc = db.collection('games').document(team_name).get()
-        if game_doc.exists:
-            game_data = game_doc.to_dict()
-            return cls(game_data)
-        return None
+    def load_from_mongodb(cls, team_name):
+        try:
+            game_data = db.games.find_one({'_id': team_name})
+            if game_data:
+                return cls(game_data)
+            return None
+        except pymongo.errors.PyMongoError as e:
+            print(f"Error loading game from MongoDB: {str(e)}")
+            return None
 
-    def update_firebase(self):
+    def update_mongodb(self):
         game_data = {
             'current_week': self.current_week,
             'players_completed_turn': self.players_completed_turn,
@@ -128,7 +134,11 @@ class Game(object):
             'kpi_cost': self.kpi_cost,
             'kpi_trucks': self.kpi_trucks
         }
-        db.collection('games').document(self.team_name).update(game_data)
+        try:
+            db.games.update_one({'_id': self.team_name}, {'$set': game_data})
+        except pymongo.errors.PyMongoError as e:
+            print(f"Error updating game in MongoDB: {str(e)}")
+
     def reset(self):
         self.kpi_customer_satisfaction = [0] * self.weeks
         self.kpi_green_score = [0] * self.weeks
@@ -146,6 +156,7 @@ class Game(object):
 
         for x in self.network_walk:  # initialize the first week
             self.network_stations[x].initialize_week(0)
+        self.save_to_mongodb()
 
     def get_config(self):
         data = {}
@@ -227,7 +238,7 @@ class Game(object):
                 self.network_stations[x].initialize_week(week+1)  # prep for the next week
         else:
             self.game_done = True
-        self.update_firebase()
+        self.update_mongodb()
         self.turn_start_time = time.time()
 
     def Run(self):
@@ -243,7 +254,7 @@ class Game(object):
             self.players_completed_turn += 1
             if self.players_completed_turn == len(self.manual_stations_names):
                 self.StepOneWeek(week)
-        self.update_firebase()
+        self.update_mongodb()
 
     def Debug_Report(self):
         if self.current_week == 0:
