@@ -32,31 +32,36 @@ import Icon2 from "../assets/landing/Icon2.jsx";
 import Icon3 from "../assets/landing/Icon3.jsx";
 
 import { GoArrowLeft, GoArrowRight } from "react-icons/go";
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { createDemo } from "../store/reducers/gameSlice.js";
 import { LoadingContext } from "../contexts/LoadingContext.jsx";
 import Hero from "../components/Home/Landing/Hero.jsx";
 import WhyChooseUs from "../components/Home/Landing/WhyChooseUs.jsx";
-import { Benefits1, Benefits2, Benefits3 } from "../components/Home/Landing/Benefits.jsx";
+import {
+  Benefits1,
+  Benefits2,
+  Benefits3,
+} from "../components/Home/Landing/Benefits.jsx";
 import HowItLooks from "../components/Home/Landing/HowItLooks.jsx";
 import { Step2, Step3, Step1 } from "../components/Home/Landing/Steps.jsx";
 import ReviewSection from "../components/Home/Landing/ReviewSection.jsx";
 import CallToAction from "../components/Home/Landing/CallToAction.jsx";
+import Chatbot from "../components/Home/Landing/Chatbot.jsx";
 
 const Landing = () => {
   const dispatch = useDispatch();
-  const {gameData, loading} = useSelector((state) => state.game)
-  const {user} = useSelector((state) => state.user)
-  const {startLoading, stopLoading}  = useContext(LoadingContext)
+  const { gameData, loading } = useSelector((state) => state.game);
+  const { user } = useSelector((state) => state.user);
+  const { startLoading, stopLoading } = useContext(LoadingContext);
 
   useEffect(() => {
-    if(loading) {
+    if (loading) {
       startLoading();
     } else {
       stopLoading();
     }
-  },[loading])
+  }, [loading]);
 
   const [isHovered, setIsHovered] = useState(0);
   const [demoData, setDemoData] = useState(null);
@@ -74,93 +79,77 @@ const Landing = () => {
       await dispatch(createDemo()).unwrap();
       // You can navigate to the demo or handle post-demo creation logic here if needed
     } catch (error) {
-      console.error('Failed to create demo:', error);
+      console.error("Failed to create demo:", error);
       // Handle any errors here
     }
   };
 
   useEffect(() => {
-    if(gameData) {
-      navigate(`/game/${gameData.team_name}/${gameData.selected_station}`)
+    if (gameData) {
+      navigate(`/game/${gameData.team_name}/${gameData.selected_station}`);
     }
   }, [gameData]);
 
   const reviews = [
     {
-      name: "Viezh Robert",
-      location: "Warsaw, Poland",
-      rating: 4.5,
+      name: "Dr. Sarah Thompson",
+      location: "University of Logistics",
+      rating: 5,
       avatar: avatar1,
-      review:
-        "Wow... I am very happy to use this VPN, it turned out to be more than my expectations and so far there have been no problems. LaslesVPN always the best.",
+      review: "The beer distribution game is a transformative learning experience, vividly demonstrating the challenges of managing supply chains in a competitive environment.",
     },
     {
-      name: "Yessica Christy",
-      location: "Shanxi, China",
+      name: "Professor Mark Chen",
+      location: "Global University",
+      rating: 5,
+      avatar: avatar2,
+      review: "This simulation brings theoretical concepts to life, allowing students to engage with real-world scenarios and understand the complexities of inventory management.",
+    },
+    {
+      name: "Dr. Emily Carter",
+      location: "National Institute of Business",
+      rating: 5,
+      avatar: avatar1,
+      review: "An eye-opening experience! The beer game encourages students to think critically about their decisions and fosters collaborative problem-solving.",
+    },
+    {
+      name: "Dr. James Ellison",
+      location: "Tech University",
+      rating: 5,
+      avatar: avatar2,
+      review: "A must for any operations management course. The game effectively illustrates the importance of communication and teamwork in navigating supply chain dynamics.",
+    },
+    {
+      name: "John Miller",
+      location: "Los Angeles, USA",
+      rating: 4.5,
+      avatar: avatar1,
+      review: "Participating in the beer game helped me realize how easily miscommunication can lead to significant losses in supply chain operations.",
+    },
+    {
+      name: "Maria Gonzales",
+      location: "Madrid, Spain",
       rating: 4.5,
       avatar: avatar2,
-      review:
-        "I like it because I like to travel far and still can connect with high speed.",
+      review: "The interactive nature of the beer distribution game makes it a fantastic tool for learning about supply chain management principles.",
     },
     {
-      name: "Kim  Jou",
-      location: "Seoul, South Korea",
+      name: "David Smith",
+      location: "Toronto, Canada",
       rating: 4.5,
       avatar: avatar1,
-      review:
-        "This is very unusual for my business that currently requires a virtual private network that has high security.",
+      review: "This game was not only educational but also a lot of fun! It opened my eyes to the complexities of supply chain logistics.",
     },
     {
-      name: "Viezh doe",
-      location: "Warsaw, Poland",
-      rating: 4.5,
-      avatar: avatar1,
-      review:
-        "Wow... I am very happy to use this VPN, it turned out to be more than my expectations and so far there have been no problems. LaslesVPN always the best.",
-    },
-    {
-      name: "Yessica rob",
-      location: "Shanxi, China",
+      name: "Lisa Wong",
+      location: "Beijing, China",
       rating: 4.5,
       avatar: avatar2,
-      review:
-        "I like it because I like to travel far and still can connect with high speed.",
+      review: "The beer game is an excellent way to teach students about demand fluctuations and the impact of their decisions on the entire supply chain.",
     },
-    {
-      name: "Kim  Jou",
-      location: "Seoul, South Korea",
-      rating: 4.5,
-      avatar: avatar1,
-      review:
-        "This is very unusual for my business that currently requires a virtual private network that has high security.",
-    },
-    {
-      name: "Viezh Robert",
-      location: "Warsaw, Poland",
-      rating: 4.5,
-      avatar: avatar1,
-      review:
-        "Wow... I am very happy to use this VPN, it turned out to be more than my expectations and so far there have been no problems. LaslesVPN always the best.",
-    },
-    {
-      name: "Yessica Christy",
-      location: "Shanxi, China",
-      rating: 4.5,
-      avatar: avatar2,
-      review:
-        "I like it because I like to travel far and still can connect with high speed.",
-    },
-    {
-      name: "Kim  Jou",
-      location: "Seoul, South Korea",
-      rating: 4.5,
-      avatar: avatar1,
-      review:
-        "This is very unusual for my business that currently requires a virtual private network that has high security.",
-    },
-
-    // Add more reviews here
+    // Add more reviews if needed
   ];
+  
 
   useEffect(() => {
     const handleResize = () => {
@@ -204,23 +193,29 @@ const Landing = () => {
     <main>
       {/* HERO SECTION */}
       <Hero handlePlayDemo={handlePlayDemo} />
-      <WhyChooseUs />
-      <Benefits1 />
-      <Benefits2 />
-      <Benefits3 />
-
-      {/* GAMING */}
       <HowItLooks />
 
       <Step1 />
 
       {/* STEP 2 */}
-    <Step2 />
+      <Step2 />
       {/* STEP 3 */}
-    <Step3 />
+      <Step3 />
 
-      {/* REVIEW */} 
-      <ReviewSection currentIndex={currentIndex} itemsPerView={itemsPerView} setCurrentIndex={setCurrentIndex} reviews={reviews} />
+      <WhyChooseUs />
+      {/* <Benefits1 /> */}
+      <Benefits2 />
+      <Benefits3 />
+
+      {/* GAMING */}
+
+      {/* REVIEW */}
+      <ReviewSection
+        currentIndex={currentIndex}
+        itemsPerView={itemsPerView}
+        setCurrentIndex={setCurrentIndex}
+        reviews={reviews}
+      />
       {/* LAST SECTION */}
       <CallToAction handlePlayDemo={handlePlayDemo} />
     </main>

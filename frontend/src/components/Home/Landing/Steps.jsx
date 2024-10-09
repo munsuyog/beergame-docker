@@ -57,7 +57,7 @@ const StepSection = ({ number, title, description, items, imageSrc, isReversed }
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <img src={imageSrc} alt={title} className="rounded-lg shadow-2xl" />
+            <img src={imageSrc} alt={title} className="rounded-lg" />
           </motion.div>
         </div>
       </div>
@@ -75,7 +75,7 @@ const Step1 = () => (
       { icon: FaCog, text: "Create copies and manage templates of your game for future events." },
       { icon: FaCog, text: "Integrate our games seamlessly with your existing systems." }
     ]}
-    imageSrc="/path/to/step1-image.jpg"
+    imageSrc="/home/hero/step1.png"
   />
 );
 
@@ -89,7 +89,7 @@ const Step2 = () => (
       { icon: FaUsers, text: "All onboarding and instructions automatically await players entering the game." },
       { icon: FaUsers, text: "Announce surprise events, like a seasonal promotion, encouraging players to cooperate and adapt to common supply chain challenges." }
     ]}
-    imageSrc="/path/to/step2-image.jpg"
+    imageSrc="/home/hero/step2.png"
     isReversed
   />
 );
@@ -104,7 +104,7 @@ const Step3 = () => (
       { icon: FaChartLine, text: "Identify bottlenecks and areas for improvement in the supply chain." },
       { icon: FaChartLine, text: "Compare results across multiple game sessions to track learning progress." }
     ]}
-    imageSrc="/path/to/step3-image.jpg"
+    imageSrc="/home/hero/step3.png"
   />
 );
 

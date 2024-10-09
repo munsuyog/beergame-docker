@@ -1,63 +1,55 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { FaRocket, FaChartLine, FaUsers } from 'react-icons/fa';
+import { FaStar, FaUsers, FaTrophy, FaChartBar } from 'react-icons/fa';
 
-const FeatureCard = ({ icon: Icon, title, description, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 50 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: index * 0.1 }}
-    whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.1)" }}
-    className="flex flex-col items-center p-6 bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl"
-  >
-    <motion.div 
-      whileHover={{ rotate: 360 }}
-      transition={{ duration: 0.5 }}
-      className="p-4 bg-blue-100 rounded-full mb-4"
-    >
-      <Icon className="text-blue-500 text-3xl" />
-    </motion.div>
-    <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
-    <p className="text-gray-600 text-center">{description}</p>
-  </motion.div>
+const FeatureCard = ({ icon: Icon, iconColor, title, description }) => (
+  <div className="flex flex-col items-center text-center p-6 border border-gray-300 rounded-lg bg-white">
+    <div className={`flex items-center justify-center w-16 h-16 mb-4 bg-white rounded-full border border-gray-300`}>
+      <Icon className={`text-3xl ${iconColor}`} />
+    </div>
+    <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
+    <p className="text-gray-700 text-sm mb-4">{description}</p>
+    {/* <button className="bg-black text-white text-sm px-6 py-2 rounded-full">Learn more</button> */}
+  </div>
 );
 
 const WhyChooseUs = () => {
   const features = [
     {
-      icon: FaRocket,
-      title: "Effortless Setup",
-      description: "Our intuitive platform enables instructors to set up their games in a flash. Enjoy a hassle-free start with minimal effort."
-    },
-    {
-      icon: FaChartLine,
-      title: "Advanced Analytics",
-      description: "Gain valuable insights with our comprehensive analytics. Track progress and measure the impact of your training sessions."
+      icon: FaStar,
+      iconColor: 'text-yellow-400', // Yellow star for "Immersive gameplay"
+      title: "Immersive gameplay",
+      description: "Our modern gameplay is what students prefer with Zensimu! Professors get captivated and engaged students in the classroom!"
     },
     {
       icon: FaUsers,
-      title: "Collaborative Learning",
-      description: "Foster teamwork and enhance communication skills through our interactive, multiplayer simulations."
+      iconColor: 'text-purple-500', // Purple for multi-organisers
+      title: "Multi-organisers & Multi-sessions",
+      description: "Essential for handling larger sessions, facilitating group training, and allowing deeper debriefing discussions."
+    },
+    {
+      icon: FaTrophy,
+      iconColor: 'text-green-500', // Green for contest-ready
+      title: "Contest-Ready",
+      description: "Easily create and analyze contests between campuses, classes, and groups during seminars or courses!"
+    },
+    {
+      icon: FaChartBar,
+      iconColor: 'text-blue-500', // Blue for automated debrief reports
+      title: "Automated debrief reports",
+      description: "Stimulate discussion and reinforce key learning objectives with our Analytics tool (graphs, charts, PDF, Excel)."
     }
   ];
 
   return (
-    <section className="py-20 px-4 bg-gray-50">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-6xl mx-auto text-center"
-      >
-        <h2 className="text-4xl font-bold text-gray-800 mb-4">Why Choose Us?</h2>
-        <p className="text-xl text-gray-600 mb-12">We are the preferred choice for many reasons.</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <FeatureCard key={index} {...feature} index={index} />
-          ))}
-        </div>
-      </motion.div>
+    <section className="py-20 bg-gray-50">
+      <div className="text-center mb-12">
+        <h2 className="text-4xl font-bold text-gray-900">What we offer?</h2>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+        {features.map((feature, index) => (
+          <FeatureCard key={index} {...feature} />
+        ))}
+      </div>
     </section>
   );
 };

@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   frontend:
     build:
@@ -21,9 +23,20 @@ services:
       - "5555:5555"
     volumes:
       - ./backend:/app
-      - ./backend/firebase-credentials.json:/app/firebase-credentials.json:ro
     environment:
       - FLASK_APP=beergame
       - FLASK_RUN_HOST=0.0.0.0
       - FLASK_ENV=development
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-credentials.json
+      - MONGO_URI=mongodb://mongodb:27017/beergame
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:
