@@ -58,7 +58,12 @@ const Lobby = () => {
   };
 
   if (!user || !sessionId) {
-    return <div>Loading user data or session information...</div>;
+    return (
+      <div>
+        <div>Loading user data or you have not logged in yet. </div>
+        <a href='/signin' className='text-blue-800 underline'>Please Login</a>
+      </div>
+    );
   }
 
   return (

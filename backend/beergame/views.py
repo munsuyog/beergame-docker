@@ -1636,6 +1636,7 @@ def assign_roles(session_id):
         logger.exception(f"An error occurred: {str(e)}")
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
     
+
 @app.route('/assign_random_roles/<session_id>', methods=['POST'])
 @cross_origin()
 def assign_random_roles(session_id):
@@ -1646,54 +1647,55 @@ def assign_random_roles(session_id):
         session = SESSIONS[session_id]
         session_data = db.sessions.find_one({'_id': session_id})
 
-        # Check if roles have already been assigned
         if session_data.get('roles_assigned', False):
             return jsonify({'error': 'Roles have already been assigned for this session'}), 400
 
         players = session_data.get('players', [])
         waiting_players = [p for p in players if p['role'] is None or p['team'] is None]
 
-        # Get available roles and CPU roles from the first game
         first_game = GAMES[session.games[0]]
-        all_roles = first_game.manual_stations_names + first_game.auto_stations_names
-        cpu_roles = first_game.auto_stations_names
+        all_roles = [name for name, station in first_game.network_stations.items() 
+                     if hasattr(station, 'auto_decide_order_qty')]
+        roles_per_team = 4  # Assuming 4 roles per team
 
-        # Prepare teams and roles
         teams = session.games
-        roles_per_team = {team: all_roles.copy() for team in teams}
-
-        # Randomly assign roles and teams
-        import random
-        random.shuffle(waiting_players)
         assignments = {}
 
-        for player in waiting_players:
-            # Find the team with the most available roles
-            team = max(roles_per_team, key=lambda k: len(roles_per_team[k]))
-            
-            # Select a role, prioritizing non-CPU roles
-            available_roles = [r for r in roles_per_team[team] if r not in cpu_roles]
-            if not available_roles:
-                available_roles = roles_per_team[team]
-            
-            role = random.choice(available_roles)
-            
-            assignments[player['uid']] = {'role': role, 'team': team}
-            roles_per_team[team].remove(role)
+        import random
+        random.shuffle(waiting_players)
 
-            # If all roles for a team are assigned, remove the team
-            if not roles_per_team[team]:
-                del roles_per_team[team]
+        for team in teams:
+            game = GAMES[team]
+            team_roles = all_roles.copy()
+            random.shuffle(team_roles)
 
-        # Assign remaining roles to CPU
-        for team, roles in roles_per_team.items():
-            for role in roles:
-                assignments[f"CPU_{team}_{role}"] = {'role': role, 'team': team, 'is_cpu': True}
+            for i in range(roles_per_team):
+                role = team_roles[i]
+                station = game.network_stations[role]
+                
+                if waiting_players:
+                    player = waiting_players.pop(0)
+                    assignments[player['uid']] = {'role': role, 'team': team, 'is_cpu': False}
+                    station.auto_decide_order_qty = False
+                else:
+                    cpu_id = f"CPU_{team}_{role}"
+                    assignments[cpu_id] = {'role': role, 'team': team, 'is_cpu': True}
+                    station.auto_decide_order_qty = True
+                
+                station.save_to_mongodb()
+
+            # Update the game object
+            game.update_stations()
+            game.save_to_mongodb()
+            logger.info(f"Updated game settings for team {team}")
+
+            if not waiting_players:
+                break
 
         # Update roles and teams in the database
         bulk_operations = []
         for player_uid, assignment in assignments.items():
-            if not player_uid.startswith("CPU_"):
+            if not assignment['is_cpu']:
                 bulk_operations.append(
                     pymongo.UpdateOne(
                         {'_id': session_id, 'players.uid': player_uid},
@@ -1704,7 +1706,6 @@ def assign_random_roles(session_id):
                     )
                 )
 
-        # Add operation to set roles_assigned to True
         bulk_operations.append(
             pymongo.UpdateOne(
                 {'_id': session_id},
@@ -1712,7 +1713,6 @@ def assign_random_roles(session_id):
             )
         )
 
-        # Execute bulk write
         if bulk_operations:
             db.sessions.bulk_write(bulk_operations)
 
@@ -1729,7 +1729,7 @@ def assign_random_roles(session_id):
     except Exception as e:
         logger.exception(f"An error occurred: {str(e)}")
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-    
+     
 # Get session details
 @app.route('/get_session/<session_id>', methods=['GET'])
 @cross_origin()
@@ -2162,7 +2162,7 @@ def generate_session_excel(session_id):
                 ws.cell(row=row, column=5, value=game.current_week)
                 row += 1
 
-        # Individual Player Performance
+        # Individual Team Performance
         for game_id in session.games:
             game = GAMES.get(game_id)
             if game:
@@ -2190,18 +2190,46 @@ def generate_session_excel(session_id):
                         ws.cell(row=row, column=7, value=sum(station.backorder[customer][-1] for customer in station.backorder))
                         row += 1
 
-                # Weekly Performance
-                ws['A10'] = "Weekly Performance"
-                ws['A10'].font = header_font
-                ws.merge_cells('A10:G10')
+                        # Add weekly data for each player
+                        row += 1
+                        ws.cell(row=row, column=1, value=f"{station.player_name} - Weekly Data")
+                        ws.cell(row=row, column=1).font = header_font
+                        row += 1
+
+                        weekly_headers = ["Week", "Orders", "Shipments", "Inventory", "Backorders", "Cost", "Fulfillment Rate", "Green Score"]
+                        for col, header in enumerate(weekly_headers, start=1):
+                            cell = ws.cell(row=row, column=col, value=header)
+                            cell.font = header_font
+                            cell.fill = header_fill
+                        row += 1
+
+                        for week in range(game.current_week):
+                            ws.cell(row=row, column=1, value=week + 1)
+                            ws.cell(row=row, column=2, value=sum(station.sent_po[supplier][week] for supplier in station.sent_po))
+                            ws.cell(row=row, column=3, value=sum(station.outbound[customer][week] for customer in station.outbound))
+                            ws.cell(row=row, column=4, value=station.inventory[week])
+                            ws.cell(row=row, column=5, value=sum(station.backorder[customer][week] for customer in station.backorder))
+                            ws.cell(row=row, column=6, value=station.kpi_total_cost[week])
+                            ws.cell(row=row, column=7, value=station.kpi_fulfilment_rate[week])
+                            ws.cell(row=row, column=8, value=station.kpi_truck_utilization[week])
+                            row += 1
+
+                        row += 1  # Add an empty row for spacing
+
+                # Team Weekly Performance
+                row += 1
+                ws.cell(row=row, column=1, value="Team Weekly Performance")
+                ws.cell(row=row, column=1).font = header_font
+                ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=7)
+                row += 1
 
                 headers = ["Week", "Cost", "Fulfillment Rate", "Green Score", "Shipments", "Inventory", "Backorders"]
                 for col, header in enumerate(headers, start=1):
-                    cell = ws.cell(row=11, column=col, value=header)
+                    cell = ws.cell(row=row, column=col, value=header)
                     cell.font = header_font
                     cell.fill = header_fill
+                row += 1
 
-                row = 12
                 for week in range(game.current_week):
                     ws.cell(row=row, column=1, value=week + 1)
                     ws.cell(row=row, column=2, value=sum(station.kpi_total_cost[week] for station in game.network_stations.values() if not isinstance(station, Demand)))
@@ -2227,5 +2255,5 @@ def generate_session_excel(session_id):
     except Exception as e:
         logger.exception(f"An error occurred while generating Excel for session {session_id}: {str(e)}")
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-
+    
 load_sessions()

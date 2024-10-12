@@ -9,7 +9,10 @@ import MessageCenter from "../dashboard/MessageCenter";
 
 const dropdownItems = {
   "Games": [
-    { name: "Beer Game", link: "/games/beergame" }
+    { name: "Beer Game", link: "/games/beergame" },
+    { name: "Operations Game 1", link: "https://survey-48e68.web.app/group/group1"},
+    { name: "Operations Game 2", link: "https://survey-48e68.web.app/group/group2"},
+    { name: "Operations Game 3", link: "https://survey-48e68.web.app/group/group3"}
   ],
   "Resources": [
     { name: "Beer Game Guide", link: "/resources/beer-guide" },

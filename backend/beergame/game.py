@@ -106,6 +106,21 @@ class Game(object):
             self.network_stations[x].initialize_week(0)
         self.save_to_mongodb()
 
+    def update_stations(self):
+        """Update the game state to reflect changes in station settings."""
+        self.manual_stations_names = []
+        self.auto_stations_names = []
+        self.demand_stations_names = []
+
+        for name, station in self.network_stations.items():
+            if hasattr(station, 'demand'):  # This is likely a Demand station
+                self.demand_stations_names.append(name)
+            elif hasattr(station, 'auto_decide_order_qty'):
+                if station.auto_decide_order_qty:
+                    self.auto_stations_names.append(name)
+                else:
+                    self.manual_stations_names.append(name)
+
     def start_game(self):
         self.current_week = 0
         self.game_done = False

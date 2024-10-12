@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaPlay, FaCog, FaUsers, FaChartBar, FaUserPlus, FaRandom, FaUserCog } from "react-icons/fa";
+import {
+  FaPlay,
+  FaCog,
+  FaUsers,
+  FaChartBar,
+  FaUserPlus,
+  FaRandom,
+  FaUserCog,
+} from "react-icons/fa";
 import { IoIosArrowRoundDown } from "react-icons/io";
 import Header from "./Header";
 import Round1 from "./Round1";
@@ -27,7 +35,13 @@ const LoadingSpinner = () => (
 );
 
 const CustomAlert = ({ type, title, message }) => (
-  <div className={`p-4 mb-4 rounded-md ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+  <div
+    className={`p-4 mb-4 rounded-md ${
+      type === "error"
+        ? "bg-red-100 text-red-700"
+        : "bg-green-100 text-green-700"
+    }`}
+  >
     <h4 className="text-lg font-semibold mb-2">{title}</h4>
     <p>{message}</p>
   </div>
@@ -67,18 +81,30 @@ const Session = () => {
 
   const handleAssignRoles = () => {
     if (Object.keys(customAssignments).length === 0) {
-      setAlert({ type: 'error', title: 'Error', message: 'Please assign roles to players before submitting.' });
+      setAlert({
+        type: "error",
+        title: "Error",
+        message: "Please assign roles to players before submitting.",
+      });
       return;
     }
     dispatch(assignRoles({ sessionId, assignments: customAssignments }))
       .unwrap()
       .then(() => {
-        setAlert({ type: 'success', title: 'Success', message: 'Roles assigned successfully!' });
+        setAlert({
+          type: "success",
+          title: "Success",
+          message: "Roles assigned successfully!",
+        });
         dispatch(getWaitingPlayers(sessionId));
         dispatch(getLobbyRolesStatus(sessionId));
       })
       .catch((error) => {
-        setAlert({ type: 'error', title: 'Error', message: `Error assigning roles: ${error.message}` });
+        setAlert({
+          type: "error",
+          title: "Error",
+          message: `Error assigning roles: ${error.message}`,
+        });
       });
   };
 
@@ -86,22 +112,30 @@ const Session = () => {
     dispatch(assignRandomRoles(sessionId))
       .unwrap()
       .then(() => {
-        setAlert({ type: 'success', title: 'Success', message: 'Roles assigned randomly successfully!' });
+        setAlert({
+          type: "success",
+          title: "Success",
+          message: "Roles assigned randomly successfully!",
+        });
         dispatch(getWaitingPlayers(sessionId));
         dispatch(getLobbyRolesStatus(sessionId));
       })
       .catch((error) => {
-        setAlert({ type: 'error', title: 'Error', message: `Error assigning random roles: ${error.message}` });
+        setAlert({
+          type: "error",
+          title: "Error",
+          message: `Error assigning random roles: ${error.message}`,
+        });
       });
   };
 
   const handleCustomAssignment = (playerId, field, value) => {
-    setCustomAssignments(prev => ({
+    setCustomAssignments((prev) => ({
       ...prev,
       [playerId]: {
         ...prev[playerId],
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
@@ -119,43 +153,59 @@ const Session = () => {
           key={teamName}
           teamName={teamName}
           roles={roles}
-          selectedRoles={roles.filter(role => role.taken).map(role => role.role)}
+          selectedRoles={roles
+            .filter((role) => role.taken)
+            .map((role) => role.role)}
         />
       );
     });
   };
 
   const renderCustomAssignment = () => {
-    const allRoles = lobbyRolesStatus ? Object.values(lobbyRolesStatus).flatMap(teamRoles => 
-      Object.values(teamRoles).map(role => role.role)
-    ) : [];
+    const allRoles = lobbyRolesStatus
+      ? Object.values(lobbyRolesStatus).flatMap((teamRoles) =>
+          Object.values(teamRoles).map((role) => role.role)
+        )
+      : [];
     const uniqueRoles = [...new Set(allRoles)];
-  
+
     return (
       <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
         <h4 className="text-xl font-semibold mb-4">Manual Assignment</h4>
-        {waitingPlayers && waitingPlayers.waiting_players && waitingPlayers.waiting_players.length > 0 && !currentSession.roles_assigned ? (
+        {waitingPlayers &&
+        waitingPlayers.waiting_players &&
+        waitingPlayers.waiting_players.length > 0 &&
+        !currentSession.roles_assigned ? (
           <div className="space-y-4">
             {waitingPlayers.waiting_players.map((player) => (
-              <div key={player.uid} className="flex flex-col space-y-2 bg-gray-50 p-4 rounded-md">
+              <div
+                key={player.uid}
+                className="flex flex-col space-y-2 bg-gray-50 p-4 rounded-md"
+              >
                 <span className="font-medium text-gray-700">{player.name}</span>
                 <div className="flex space-x-2">
                   <select
                     className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={customAssignments[player.uid]?.team || ''}
-                    onChange={(e) => handleCustomAssignment(player.uid, 'team', e.target.value)}
+                    value={customAssignments[player.uid]?.team || ""}
+                    onChange={(e) =>
+                      handleCustomAssignment(player.uid, "team", e.target.value)
+                    }
                   >
                     <option value="">Select Team</option>
-                    {sessionTeams && sessionTeams.games && sessionTeams.games.map((game) => (
-                      <option key={game.team_name} value={game.team_name}>
-                        {game.team_name}
-                      </option>
-                    ))}
+                    {sessionTeams &&
+                      sessionTeams.games &&
+                      sessionTeams.games.map((game) => (
+                        <option key={game.team_name} value={game.team_name}>
+                          {game.team_name}
+                        </option>
+                      ))}
                   </select>
                   <select
                     className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={customAssignments[player.uid]?.role || ''}
-                    onChange={(e) => handleCustomAssignment(player.uid, 'role', e.target.value)}
+                    value={customAssignments[player.uid]?.role || ""}
+                    onChange={(e) =>
+                      handleCustomAssignment(player.uid, "role", e.target.value)
+                    }
                   >
                     <option value="">Select Role</option>
                     {uniqueRoles.map((role) => (
@@ -169,7 +219,9 @@ const Session = () => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-600">All players are assigned and the game has started.</p>
+          <p className="text-gray-600">
+            All players are assigned and the game has started.
+          </p>
         )}
         <button
           onClick={handleAssignRoles}
@@ -190,23 +242,41 @@ const Session = () => {
       transition={{ duration: 0.3 }}
       className="mt-8"
     >
-      <h2 className="text-3xl font-bold mb-8 text-gray-800">Game Lobby Management</h2>
-      {alert && <CustomAlert type={alert.type} title={alert.title} message={alert.message} />}
+      <h2 className="text-3xl font-bold mb-8 text-gray-800">
+        Game Lobby Management
+      </h2>
+      {alert && (
+        <CustomAlert
+          type={alert.type}
+          title={alert.title}
+          message={alert.message}
+        />
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-xl font-semibold mb-4 flex items-center">
             <FaUsers className="mr-2 text-blue-500" />
             Waiting Players
           </h3>
-          {waitingPlayers && waitingPlayers.waiting_players && waitingPlayers.waiting_players.length > 0 ? (
-            <ul className="space-y-2">
-              {waitingPlayers.waiting_players.map((player) => (
-                <li key={player.uid} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
-                  <span className="font-medium">{player.name}</span>
-                  <span className="text-sm text-gray-500">UID: {player.uid}</span>
-                </li>
-              ))}
-            </ul>
+          {waitingPlayers &&
+          waitingPlayers.waiting_players &&
+          waitingPlayers.waiting_players.length > 0 ? (
+            <div>
+              Players waiting: {waitingPlayers.waiting_players.length}
+              <ul className="space-y-2">
+                {waitingPlayers.waiting_players.map((player) => (
+                  <li
+                    key={player.uid}
+                    className="flex items-center justify-between bg-gray-50 p-3 rounded-md"
+                  >
+                    <span className="font-medium">{player.name}</span>
+                    <span className="text-sm text-gray-500">
+                      UID: {player.uid}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : (
             <p className="text-gray-600">No players waiting in the lobby.</p>
           )}
@@ -216,7 +286,9 @@ const Session = () => {
             <FaUserPlus className="mr-2 text-green-500" />
             Role Assignment
           </h3>
-          {waitingPlayers && waitingPlayers.waiting_players && waitingPlayers.waiting_players.length > 0 ? (
+          {waitingPlayers &&
+          waitingPlayers.waiting_players &&
+          waitingPlayers.waiting_players.length > 0 ? (
             <>
               <button
                 onClick={handleAssignRandomRoles}
@@ -228,7 +300,9 @@ const Session = () => {
               {renderCustomAssignment()}
             </>
           ) : (
-            <div className="text-gray-600">All players have been assigned roles.</div>
+            <div className="text-gray-600">
+              All players have been assigned roles.
+            </div>
           )}
         </div>
       </div>
@@ -237,7 +311,14 @@ const Session = () => {
 
   if (loading) return <LoadingSpinner />;
   if (error) return <CustomAlert type="error" title="Error" message={error} />;
-  if (!currentSession) return <CustomAlert type="error" title="Error" message="No session data available" />;
+  if (!currentSession)
+    return (
+      <CustomAlert
+        type="error"
+        title="Error"
+        message="No session data available"
+      />
+    );
 
   const tabContent = {
     1: (
@@ -307,9 +388,7 @@ const Session = () => {
       />
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         <AnimatePresence mode="wait">
-          <div className="py-2">
-            {tabContent[active]}
-          </div>
+          <div className="py-2">{tabContent[active]}</div>
         </AnimatePresence>
       </div>
       <Modal
@@ -320,7 +399,9 @@ const Session = () => {
         contentLabel="Session Settings"
       >
         <div className="bg-white rounded-lg p-8 max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Session Settings</h2>
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">
+            Session Settings
+          </h2>
           <GameSetup />
           <button
             onClick={closeSettings}

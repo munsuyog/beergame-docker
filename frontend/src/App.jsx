@@ -66,6 +66,7 @@ function App() {
 
           <Route element={<ProtectedRoute />}>
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+
             <Route path="/dashboard" element={<DashboardLayout />}>
               {/* <Route index element={<Dashboard />} /> */}
               <Route path="overview" element={<Overview />} />
