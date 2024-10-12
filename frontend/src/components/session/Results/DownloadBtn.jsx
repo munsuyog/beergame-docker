@@ -2,9 +2,7 @@ import React from "react";
 import { FaFileExcel } from "react-icons/fa";
 
 const DownloadExcelButton = ({ sessionId }) => {
-  const API_BASE_URL = import.meta.env.VITE_API_URL
-    ? import.meta.env.VITE_API_URL
-    : "http://localhost:5555";
+  const API_BASE_URL = 'http://125.20.54.14:5555';
 
   const handleDownload = async () => {
     try {
