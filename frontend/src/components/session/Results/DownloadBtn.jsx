@@ -1,23 +1,31 @@
-import React from 'react';
-import { FaFileExcel } from 'react-icons/fa';
+import React from "react";
+import { FaFileExcel } from "react-icons/fa";
 
 const DownloadExcelButton = ({ sessionId }) => {
+  const API_BASE_URL = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : "http://localhost:5555";
+
   const handleDownload = async () => {
     try {
-      const response = await fetch(`http://localhost:5555/generate_session_excel/${sessionId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/generate_session_excel/${sessionId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type":
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to download file');
+        throw new Error("Failed to download file");
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `session_${sessionId}.xlsx`;
       document.body.appendChild(a);
@@ -25,7 +33,7 @@ const DownloadExcelButton = ({ sessionId }) => {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading the file:', error);
+      console.error("Error downloading the file:", error);
     }
   };
 
