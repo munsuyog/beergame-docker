@@ -25,6 +25,7 @@ import DashboardLayout from './InstructorDashboard/DashboardLayout'
 import Overview from "./components/dashboard/Overview";
 import Upgrade from "./components/dashboard/Upgrade";
 import Settings from "./components/dashboard/Settings";
+import SettingsTeam from "./components/settings/SettingsTeam";
 
 function App() {
   const location = useLocation();
@@ -71,11 +72,12 @@ function App() {
               <Route path="upgrade" element={<Upgrade />} />
               <Route path="sessions" element={<Session />} />
               <Route path="students" element={<div>Students Page</div>} />
-              <Route path="settings" element={<Settings />} />
+              <Route path="settings" element={<Settings />}/> 
             </Route>
             <Route path="/game" element={<GameSimulation />} />
             <Route path="/edit" element={<EditPage />} />
             <Route path="/session/:sessionId" element={<SessionPage />} />
+            <Route path="/session/:sessionId/settings/:teamId" element={<SettingsTeam />} />
           </Route>
         </Routes>
         {!hideNavFooter && <Footer />}

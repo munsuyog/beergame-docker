@@ -328,93 +328,205 @@ def admin_game():
     return render_template('admin_game.html', game=this_game)
 
 
-@app.route('/join_station', methods=['POST'])
+# @app.route('/join_station', methods=['POST'])
+# @cross_origin()
+# def join_station():
+#     try:
+#         data = request.json
+#         selected_game = data.get('selected_game')
+#         player_name = data.get('player_name')
+#         password = data.get('password')
+
+#         if not selected_game or not player_name or not password:
+#             return jsonify({'error': 'Missing required parameters'}), 400
+
+#         if selected_game not in GAMES:
+#             return jsonify({'error': 'Selected game is no longer valid. Please select another game.'}), 400
+
+#         if GAMES[selected_game].play_password != password:
+#             return jsonify({'error': 'Incorrect password!'}), 400
+
+#         session['player_name'] = player_name
+#         session['selected_game'] = selected_game
+
+#         # Update the player name in the game and MongoDB
+#         game = GAMES[selected_game]
+#         updated_station = None
+#         for station in game.network_stations.values():
+#             if station.player_name.startswith('player') and station.player_name != player_name:
+#                 station.player_name = player_name
+#                 station.touch()
+#                 updated_station = station
+#                 break
+
+#         if updated_station:
+#             # Update MongoDB
+#             result = db.games.update_one(
+#                 {'_id': selected_game, 'stations.name': updated_station.station_name},
+#                 {'$set': {
+#                     'stations.$.player_name': player_name,
+#                     'stations.$.last_communication_time': updated_station.last_communication_time
+#                 }}
+#             )
+#             if result.modified_count == 0:
+#                 logger.warning(f"Failed to update player name in MongoDB for game {selected_game}, station {updated_station.station_name}")
+#         else:
+#             logger.warning(f"No available station found for player {player_name} in game {selected_game}")
+#             return jsonify({'error': 'No available station found'}), 400
+
+#         if game.manual_stations_names:
+#             stations = game.manual_stations_names
+#             return jsonify({'stations': stations, 'assigned_station': updated_station.station_name}), 200
+#         else:
+#             if game.Run():
+#                 return jsonify({'message': 'Game simulation complete. (All stations are fully automated, see game config)'}), 200
+#             else:
+#                 return jsonify({'message': 'Game already simulated. Nothing done.'}), 200
+#     except pymongo.errors.PyMongoError as e:
+#         logger.exception(f"A MongoDB error occurred in join_station: {str(e)}")
+#         return jsonify({'error': f'A database error occurred: {str(e)}'}), 500
+#     except Exception as e:
+#         logger.exception(f"An error occurred in join_station: {str(e)}")
+#         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    
+
+# @app.route('/play_screen', methods=['GET'])
+# @cross_origin()
+# def play_screen():
+#     this_game = request.args.get('selected_game')
+#     this_station = request.args.get('selected_station')
+
+#     if not this_game or not this_station:
+#         return jsonify({'error': 'No game or station selected'}), 400
+
+#     if this_game not in GAMES.keys():
+#         return jsonify({'error': 'Game is no longer valid'}), 400
+#     if this_station not in GAMES[this_game].network_stations.keys():
+#         return jsonify({'error': 'Station is no longer valid'}), 400
+#     if this_station not in GAMES[this_game].manual_stations_names:
+#         return jsonify({'error': 'Station has been switched to autopilot'}), 400
+#     if 'player_name' not in session.keys():
+#         session['player_name'] = ''
+#     if GAMES[this_game].network_stations[this_station].player_name == session['player_name']:
+#         GAMES[this_game].network_stations[this_station].touch()
+#     elif time.time() - GAMES[this_game].network_stations[this_station].last_communication_time > SecondsAway_to_Disconnect:
+#         GAMES[this_game].network_stations[this_station].touch()
+#         GAMES[this_game].network_stations[this_station].player_name = session['player_name']
+#     else:
+#         return jsonify({'error': 'Station already selected by another player'}), 400
+
+#     static_info = {
+#         'weeks': GAMES[this_game].weeks,
+#         'current_week': GAMES[this_game].current_week,
+#         'turn_time': GAMES[this_game].turn_time,
+#         'number_of_players': len(GAMES[this_game].manual_stations_names),
+#         'secondsaway_to_disconnect': SecondsAway_to_Disconnect,
+#         'RefreshInterval_PlayScreen': RefreshInterval_PlayScreen,
+#         'suppliers': [x.station_name for x in GAMES[this_game].network_stations[this_station].suppliers],
+#         'customers': [x.station_name for x in GAMES[this_game].network_stations[this_station].customers],
+#         'auto_ship': GAMES[this_game].network_stations[this_station].auto_decide_ship_qty,
+#         'auto_order': GAMES[this_game].network_stations[this_station].auto_decide_order_qty,
+#         'game_info': {
+#             'holding_cost': GAMES[this_game].network_stations[this_station].holding_cost,
+#             'backorder_cost': GAMES[this_game].network_stations[this_station].backorder_cost,
+#             'transport_cost': GAMES[this_game].network_stations[this_station].transport_cost,
+#             'transport_size': GAMES[this_game].network_stations[this_station].transport_size,
+#             'delay_shipping': GAMES[this_game].network_stations[this_station].delay_shipping,
+#             'delay_ordering': GAMES[this_game].network_stations[this_station].delay_ordering
+#         }
+#     }
+
+#     if len(GAMES[this_game].network_stations[this_station].suppliers) == 0 and \
+#        not GAMES[this_game].network_stations[this_station].auto_decide_order_qty:
+#         static_info['suppliers'] = ['MyWorkshop']
+
+#     return jsonify(static_info), 200
+
+
+@app.route('/join_and_play', methods=['POST'])
 @cross_origin()
-def join_station():
+def join_and_play():
     try:
         data = request.json
         selected_game = data.get('selected_game')
         player_name = data.get('player_name')
         password = data.get('password')
+        selected_station = data.get('selected_station')
 
-        if not selected_game or not player_name or not password:
+        if not all([selected_game, player_name, password, selected_station]):
             return jsonify({'error': 'Missing required parameters'}), 400
 
         if selected_game not in GAMES:
             return jsonify({'error': 'Selected game is no longer valid. Please select another game.'}), 400
 
-        if GAMES[selected_game].play_password != password:
+        game = GAMES[selected_game]
+
+        if game.play_password != password:
             return jsonify({'error': 'Incorrect password!'}), 400
 
-        session['player_name'] = player_name
-        session['selected_game'] = selected_game
+        if selected_station not in game.network_stations:
+            return jsonify({'error': 'Invalid station selected'}), 400
 
-        if GAMES[selected_game].manual_stations_names:
-            stations = GAMES[selected_game].manual_stations_names
-            return jsonify({'stations': stations}), 200
-        else:
-            if GAMES[selected_game].Run():
-                return jsonify({'message': 'Game simulation complete. (All stations are fully automated, see game config)'}), 200
-            else:
-                return jsonify({'message': 'Game already simulated. Nothing done.'}), 200
-    except Exception as e:
-        show_error("Could not join station", e)
-        return jsonify({'error': 'An error occurred while processing the request'}), 500
+        station = game.network_stations[selected_station]
 
+        if not station.player_name.startswith('player') and station.player_name != player_name:
+            return jsonify({'error': 'Selected station is already taken'}), 400
 
-@app.route('/play_screen', methods=['GET'])
-@cross_origin()
-def play_screen():
-    this_game = request.args.get('selected_game')
-    this_station = request.args.get('selected_station')
+        # Update the player name in the game
+        station.player_name = player_name
+        station.touch()
 
-    if not this_game or not this_station:
-        return jsonify({'error': 'No game or station selected'}), 400
+        # Update MongoDB
+        result = db.games.update_one(
+            {'_id': selected_game, 'stations.name': selected_station},
+            {'$set': {
+                'stations.$.player_name': player_name,
+                'stations.$.last_communication_time': station.last_communication_time
+            }}
+        )
+        if result.modified_count == 0:
+            logger.warning(f"Failed to update player name in MongoDB for game {selected_game}, station {selected_station}")
 
-    if this_game not in GAMES.keys():
-        return jsonify({'error': 'Game is no longer valid'}), 400
-    if this_station not in GAMES[this_game].network_stations.keys():
-        return jsonify({'error': 'Station is no longer valid'}), 400
-    if this_station not in GAMES[this_game].manual_stations_names:
-        return jsonify({'error': 'Station has been switched to autopilot'}), 400
-    if 'player_name' not in session.keys():
-        session['player_name'] = ''
-    if GAMES[this_game].network_stations[this_station].player_name == session['player_name']:
-        GAMES[this_game].network_stations[this_station].touch()
-    elif time.time() - GAMES[this_game].network_stations[this_station].last_communication_time > SecondsAway_to_Disconnect:
-        GAMES[this_game].network_stations[this_station].touch()
-        GAMES[this_game].network_stations[this_station].player_name = session['player_name']
-    else:
-        return jsonify({'error': 'Station already selected by another player'}), 400
-
-    static_info = {
-        'weeks': GAMES[this_game].weeks,
-        'current_week': GAMES[this_game].current_week,
-        'turn_time': GAMES[this_game].turn_time,
-        'number_of_players': len(GAMES[this_game].manual_stations_names),
-        'secondsaway_to_disconnect': SecondsAway_to_Disconnect,
-        'RefreshInterval_PlayScreen': RefreshInterval_PlayScreen,
-        'suppliers': [x.station_name for x in GAMES[this_game].network_stations[this_station].suppliers],
-        'customers': [x.station_name for x in GAMES[this_game].network_stations[this_station].customers],
-        'auto_ship': GAMES[this_game].network_stations[this_station].auto_decide_ship_qty,
-        'auto_order': GAMES[this_game].network_stations[this_station].auto_decide_order_qty,
-        'game_info': {
-            'holding_cost': GAMES[this_game].network_stations[this_station].holding_cost,
-            'backorder_cost': GAMES[this_game].network_stations[this_station].backorder_cost,
-            'transport_cost': GAMES[this_game].network_stations[this_station].transport_cost,
-            'transport_size': GAMES[this_game].network_stations[this_station].transport_size,
-            'delay_shipping': GAMES[this_game].network_stations[this_station].delay_shipping,
-            'delay_ordering': GAMES[this_game].network_stations[this_station].delay_ordering
+        # Prepare play screen information
+        static_info = {
+            'weeks': game.weeks,
+            'current_week': game.current_week,
+            'turn_time': game.turn_time,
+            'number_of_players': len(game.manual_stations_names),
+            'secondsaway_to_disconnect': SecondsAway_to_Disconnect,
+            'RefreshInterval_PlayScreen': RefreshInterval_PlayScreen,
+            'suppliers': [x.station_name for x in station.suppliers],
+            'customers': [x.station_name for x in station.customers],
+            'auto_ship': station.auto_decide_ship_qty,
+            'auto_order': station.auto_decide_order_qty,
+            'game_info': {
+                'holding_cost': station.holding_cost,
+                'backorder_cost': station.backorder_cost,
+                'transport_cost': station.transport_cost,
+                'transport_size': station.transport_size,
+                'delay_shipping': station.delay_shipping,
+                'delay_ordering': station.delay_ordering
+            }
         }
-    }
 
-    if len(GAMES[this_game].network_stations[this_station].suppliers) == 0 and \
-       not GAMES[this_game].network_stations[this_station].auto_decide_order_qty:
-        static_info['suppliers'] = ['MyWorkshop']
+        if len(station.suppliers) == 0 and not station.auto_decide_order_qty:
+            static_info['suppliers'] = ['MyWorkshop']
 
-    return jsonify(static_info), 200
+        return jsonify({
+            'message': 'Successfully joined the game',
+            'game': selected_game,
+            'station': selected_station,
+            'player_name': player_name,
+            'game_info': static_info
+        }), 200
 
-
+    except pymongo.errors.PyMongoError as e:
+        logger.exception(f"A MongoDB error occurred in join_and_play: {str(e)}")
+        return jsonify({'error': f'A database error occurred: {str(e)}'}), 500
+    except Exception as e:
+        logger.exception(f"An error occurred in join_and_play: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    
 @app.route('/monitor_games_screen', methods=['POST','GET'])
 def monitor_games_screen():
     games_list = []
@@ -760,35 +872,6 @@ def load_server_state():
 ################################################################################
 # Debug screens
 ################################################################################
-@app.route('/debug', methods=['GET'])
-def debug():
-    return select_game_page(text='Select a game to debug:',next_page='debug_screen', ask_name=False, ask_password=False)
-
-
-@app.route('/debug_screen', methods=['GET','POST'])
-def debug_screen():
-    if request.method == 'GET':
-        if 'selected_game' in session.keys():
-            this_game = session['selected_game']
-        else:
-            this_game = ''
-        if this_game not in GAMES.keys():
-            flash('Game is no longer valid, please select another game.')
-            return redirect(url_for('debug'))
-    if request.method == 'POST':
-        this_game = request.form.get('selected_game')
-        if this_game == '** No games created yet! **':
-            return redirect(url_for('index'))
-        if this_game not in GAMES.keys():
-            flash('Please select a game.')
-            return redirect(url_for('debug'))
-        session['selected_game'] = this_game
-    static_info = {'game':this_game,
-                   'weeks':GAMES[this_game].weeks,
-                   'number_of_players':len(GAMES[this_game].manual_stations_names),
-                   'RefreshInterval_GameDebug':RefreshInterval_GameDebug}
-    return render_template('admin_debug.html', static_info=static_info)
-#
 #
 # @app.route('/debug_wsg', methods=['GET'])
 # def debug_wsg():
@@ -806,51 +889,90 @@ def debug_screen():
 # AJAX
 ################################################################################
 @app.route('/change_game_settings', methods=['POST'])
+@cross_origin()
 def change_game_settings():
     try:
         this_game = request.args.get('game')
         logger.info(f"Received request to change settings for game: {this_game}")
-        
-        game_settings = request.json
-        
+
+        if this_game not in GAMES:
+            return jsonify({'result': False, 'msg': f"Game {this_game} not found."}), 404
+
+        # Log request details for debugging
+        logger.debug(f"Request headers: {dict(request.headers)}")
+        logger.debug(f"Request method: {request.method}")
+        logger.debug(f"Request content type: {request.content_type}")
+        logger.debug(f"Raw request data: {request.get_data(as_text=True)}")
+
+        try:
+            game_settings = request.get_json(force=True)
+            if game_settings is None:
+                raise ValueError("Empty JSON data")
+        except Exception as json_error:
+            logger.error(f"JSON parsing error: {str(json_error)}")
+            # Attempt to read raw data
+            raw_data = request.get_data(as_text=True)
+            logger.debug(f"Raw request data: {raw_data}")
+            return jsonify({
+                'result': False,
+                'msg': f"Failed to parse JSON data: {str(json_error)}. Raw data: {raw_data[:200]}..."
+            }), 400
+
+        logger.debug(f"Parsed game settings: {game_settings}")
+
         # Convert text lists to numeric lists
         logger.debug("Processing demand settings")
-        for x in game_settings['demands']:
+        for x in game_settings.get('demands', []):
             x['demand'] = txt2list(x['demand'])
-        
+
         logger.debug("Processing station settings")
-        for x in game_settings['stations']:
+        for x in game_settings.get('stations', []):
             x['order_max'] = txt2list(x['order_max'])
             x['order_min'] = txt2list(x['order_min'])
             x['ship_max'] = txt2list(x['ship_max'])
             x['ship_min'] = txt2list(x['ship_min'])
-        
+
         logger.debug("Processing script settings")
-        for x in game_settings['script']:
+        for x in game_settings.get('script', []):
             x['week'] = int(x['week'])
-        
+
         # Ensure that the game name is not changed
-        game_settings['id'] = GAMES[this_game]
-        
+        game_settings['team_name'] = this_game
+        game_settings['_id'] = this_game  # Use the game name as MongoDB _id
+
         # Create a new game object with the updated settings
         logger.info("Creating new game object with updated settings")
-        G = game.Game(game_settings)
-        
+        try:
+            G = game.Game(game_settings)
+        except Exception as game_error:
+            logger.error(f"Error creating game object: {str(game_error)}")
+            return jsonify({'result': False, 'msg': f"Error in game settings: {str(game_error)}"}), 400
+
         # Update the game in the GAMES dictionary
         logger.info(f"Updating game: {this_game}")
         GAMES[this_game] = G
-        
-        session['selected_game'] = this_game
+
+        # Update the game in MongoDB
+        try:
+            result = db.games.replace_one({'_id': this_game}, game_settings, upsert=True)
+            if result.modified_count > 0 or result.upserted_id:
+                logger.info(f"Game {this_game} updated in MongoDB")
+            else:
+                logger.warning(f"No changes detected for game {this_game} in MongoDB")
+        except pymongo.errors.PyMongoError as mongo_error:
+            logger.error(f"MongoDB error: {str(mongo_error)}")
+            return jsonify({'result': False, 'msg': f"Database error: {str(mongo_error)}"}), 500
+
         logger.info(f"Game settings updated successfully for: {this_game}")
-        return jsonify({'result': True, 'msg': 'Game setup saved.'})
-    
+        return jsonify({'result': True, 'msg': 'Game setup saved successfully.'})
+
     except Exception as e:
         logger.error(f"Error occurred while saving game setup for {this_game}: {str(e)}", exc_info=True)
         return jsonify({
             'result': False,
-            'msg': f"Couldn't save game setup. Error: Exception of type {type(e).__name__} occurred. Arguments:{e.args}."
-        })
-
+            'msg': f"Couldn't save game setup. Error: {str(e)}"
+        }), 500  
+    
 @app.route('/submit', methods=['POST'])
 @cross_origin()
 def submit():
@@ -951,32 +1073,50 @@ def get_game_status():
 
     if current_week == 0:
         return jsonify({
-            'week':current_week,
-            'waitingfor':[GAMES[this_game].network_stations[x].station_name for x in GAMES[this_game].manual_stations_names
-                          if GAMES[this_game].network_stations[x].week_turn_completed < current_week],
-            'disconnected':[GAMES[this_game].network_stations[x].station_name for x in GAMES[this_game].manual_stations_names
-                            if (current_time - GAMES[this_game].network_stations[x].last_communication_time) >= SecondsAway_to_Disconnect]})
+            'week': current_week,
+            'waitingfor': [GAMES[this_game].network_stations[x].station_name for x in GAMES[this_game].manual_stations_names
+                           if GAMES[this_game].network_stations[x].week_turn_completed < current_week],
+            'disconnected': [GAMES[this_game].network_stations[x].station_name for x in GAMES[this_game].manual_stations_names
+                             if (current_time - GAMES[this_game].network_stations[x].last_communication_time) >= SecondsAway_to_Disconnect]
+        })
 
     stations_list = GAMES[this_game].manual_stations_names + GAMES[this_game].auto_stations_names
     demands_list = GAMES[this_game].demand_stations_names
-    cost_inventory_sum = {k:[0] for k in stations_list}
-    cost_backorder_sum = {k:[0] for k in stations_list}
-    cost_transport_sum = {k:[0] for k in stations_list}
-    cost_total_sum = {k:[0] for k in stations_list}
-    fulfilment_avg = {k:[0] for k in stations_list}
-    green_score_avg = {k:[0] for k in stations_list}
-    cost = {k:[0]*current_week for k in stations_list}
-    fulfilment = {k:[0]*current_week for k in stations_list}
-    green_score = {k:[0]*current_week for k in stations_list}
-    shipments = {k:[0]*current_week for k in stations_list}
-    extra_shipments = {k:[0]*current_week for k in stations_list}
-    backorder = {k:[] for k in stations_list}
-    inventory = {k:[] for k in stations_list}
-    orders = {k:[] for k in (stations_list + demands_list)}
-    deliveries = {k:[] for k in stations_list}
+    cost_inventory_sum = {k: [0] for k in stations_list}
+    cost_backorder_sum = {k: [0] for k in stations_list}
+    cost_transport_sum = {k: [0] for k in stations_list}
+    cost_total_sum = {k: [0] for k in stations_list}
+    fulfilment_avg = {k: [0] for k in stations_list}
+    green_score_avg = {k: [0] for k in stations_list}
+    cost = {k: [0]*current_week for k in stations_list}
+    fulfilment = {k: [0]*current_week for k in stations_list}
+    green_score = {k: [0]*current_week for k in stations_list}
+    shipments = {k: [0]*current_week for k in stations_list}
+    extra_shipments = {k: [0]*current_week for k in stations_list}
+    backorder = {k: [] for k in stations_list}
+    inventory = {k: [] for k in stations_list}
+    orders = {k: [] for k in (stations_list + demands_list)}
+    deliveries = {k: [] for k in stations_list}
+
+    player_info = {}
+    player_performance = {}
 
     for x in (stations_list + demands_list):
         S = GAMES[this_game].network_stations[x]
+        player_name = S.player_name if hasattr(S, 'player_name') else 'Demand'
+        
+        # Check if it's a Station or Demand object
+        if hasattr(S, 'auto_decide_order_qty'):
+            is_cpu = S.auto_decide_order_qty
+        else:
+            is_cpu = True  # Demand objects are always considered "CPU"
+
+        player_info[x] = {
+            'name': player_name,
+            'is_cpu': is_cpu,
+            'station': x
+        }
+
         if x in GAMES[this_game].demand_stations_names:
             orders[x] = S.demand
         else:
@@ -997,29 +1137,50 @@ def get_game_status():
             orders[x] = game.combine_weekly(S.sent_po)
             deliveries[x] = game.combine_weekly(S.outbound)
 
+            player_performance[x] = {
+                'cost_inventory': cost_inventory_sum[x],
+                'cost_backorder': cost_backorder_sum[x],
+                'cost_transport': cost_transport_sum[x],
+                'cost_total': cost_total_sum[x],
+                'fulfilment_rate': fulfilment_avg[x],
+                'green_score': green_score_avg[x],
+                'weekly_cost': cost[x],
+                'weekly_fulfilment': fulfilment[x],
+                'weekly_green_score': green_score[x],
+                'weekly_shipments': shipments[x],
+                'weekly_extra_shipments': extra_shipments[x],
+                'backorder': backorder[x],
+                'inventory': inventory[x],
+                'orders': orders[x],
+                'deliveries': deliveries[x]
+            }
+
     return jsonify({
-        'week':current_week,
-        'waitingfor':[GAMES[this_game].network_stations[x].station_name for x in GAMES[this_game].manual_stations_names
-                      if GAMES[this_game].network_stations[x].week_turn_completed < current_week],
-        'disconnected':[GAMES[this_game].network_stations[x].station_name for x in GAMES[this_game].manual_stations_names
-                        if (current_time - GAMES[this_game].network_stations[x].last_communication_time) >= SecondsAway_to_Disconnect],
-        'data':{
-            'cost_inventory_sum':cost_inventory_sum,
-            'cost_backorder_sum':cost_backorder_sum,
-            'cost_transport_sum':cost_transport_sum,
-            'cost_total_sum':cost_total_sum,
-            'fulfilment_avg':fulfilment_avg,
-            'green_score_avg':green_score_avg,
-            'cost':cost,
-            'fulfilment':fulfilment,
-            'green_score':green_score,
-            'shipments':shipments,
-            'extra-shipments':extra_shipments,
-            'backorder':backorder,
-            'inventory':inventory,
-            'orders':orders,
-            'deliveries':deliveries}
-        })
+        'week': current_week,
+        'waitingfor': [GAMES[this_game].network_stations[x].station_name for x in GAMES[this_game].manual_stations_names
+                       if GAMES[this_game].network_stations[x].week_turn_completed < current_week],
+        'disconnected': [GAMES[this_game].network_stations[x].station_name for x in GAMES[this_game].manual_stations_names
+                         if (current_time - GAMES[this_game].network_stations[x].last_communication_time) >= SecondsAway_to_Disconnect],
+        'players': player_info,
+        'player_performance': player_performance,
+        'data': {
+            'cost_inventory_sum': cost_inventory_sum,
+            'cost_backorder_sum': cost_backorder_sum,
+            'cost_transport_sum': cost_transport_sum,
+            'cost_total_sum': cost_total_sum,
+            'fulfilment_avg': fulfilment_avg,
+            'green_score_avg': green_score_avg,
+            'cost': cost,
+            'fulfilment': fulfilment,
+            'green_score': green_score,
+            'shipments': shipments,
+            'extra-shipments': extra_shipments,
+            'backorder': backorder,
+            'inventory': inventory,
+            'orders': orders,
+            'deliveries': deliveries
+        }
+    })
 
 
 @app.route('/get_game_status_radar', methods=['GET'])
@@ -1201,9 +1362,11 @@ def create_session():
         SESSIONS[session_id] = new_session
 
         logger.info("Session creation completed successfully")
+        session_link = f"{request.host_url}join_session/{session_id}"
         return jsonify({
             'message': 'Session created successfully',
             'session_id': session_id,
+            'session_link': session_link,
             'num_games_created': num_teams
         }), 201
 
@@ -1300,56 +1463,269 @@ def get_sessions():
     return jsonify(sessions), 200
 
 # Join a session
-@app.route('/join_session', methods=['POST'])
+@app.route('/join_session/<session_id>', methods=['POST'])
 @cross_origin()
-def join_session():
+def join_session(session_id):
     data = request.json
-    session_id = data.get('session_id')
     player_uid = data.get('player_uid')
+    player_name = data.get('player_name')
 
-    if not session_id or not player_uid:
-        return jsonify({'error': 'Missing session_id or player_uid'}), 400
+    if not session_id or not player_uid or not player_name:
+        return jsonify({'error': 'Missing required parameters'}), 400
 
     try:
-        # Try to get the session from memory first
-        if session_id in SESSIONS:
-            session = SESSIONS[session_id]
-        else:
-            # If not in memory, try to fetch from MongoDB
-            session_data = db.sessions.find_one({'_id': session_id})
-            if not session_data:
-                return jsonify({'error': 'Session not found'}), 404
-            
-            # Create a Session object from the database data
-            session = Session(
-                session_data['name'],
-                session_data['owner_id'],
-                session_data['num_teams']
-            )
-            session.id = session_id
-            session.games = session_data['games']
-            session.players = set(session_data['players'])
-            
-            # Add to memory
-            SESSIONS[session_id] = session
+        if session_id not in SESSIONS:
+            return jsonify({'error': 'Session not found'}), 404
 
+        session = SESSIONS[session_id]
+        
         # Add the player to the session
         session.players.add(player_uid)
 
         # Update session in MongoDB
         result = db.sessions.update_one(
             {'_id': session_id},
-            {'$addToSet': {'players': player_uid}}
+            {'$addToSet': {'players': {'uid': player_uid, 'name': player_name, 'role': None, 'team': None}}},
+            upsert=True
         )
 
-        if result.modified_count == 0 and result.matched_count == 0:
+        if result.modified_count == 0 and result.upserted_id is None:
+            logger.error(f"Failed to update session {session_id} with player {player_uid}")
             return jsonify({'error': 'Failed to update session'}), 500
 
-        return jsonify({'message': 'Joined session successfully'}), 200
+        return jsonify({'message': 'Joined session successfully', 'waiting_room_url': f"/wait_for_game_start/{session_id}/{player_uid}"}), 200
+
+    except Exception as e:
+        logger.exception(f"An error occurred in join_session: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+
+# Wait for game to start
+@app.route('/wait_for_game_start/<session_id>/<player_uid>', methods=['GET'])
+@cross_origin()
+def wait_for_game_start(session_id, player_uid):
+    try:
+        if session_id not in SESSIONS:
+            logger.error(f"Session {session_id} not found in SESSIONS dictionary")
+            return jsonify({'error': 'Session not found'}), 404
+
+        session = SESSIONS[session_id]
+        
+        session_data = db.sessions.find_one({'_id': session_id})
+        
+        if session_data is None:
+            logger.error(f"Session {session_id} not found in database")
+            return jsonify({'error': 'Session data not found in database'}), 404
+
+        players = session_data.get('players', [])
+        player = next((p for p in players if p['uid'] == player_uid), None)
+
+        if player is None:
+            logger.error(f"Player {player_uid} not found in session {session_id}")
+            return jsonify({'error': 'Player not found in session'}), 404
+
+        if player.get('role') and player.get('team'):
+            game = GAMES.get(player['team'])
+            if game:
+                team_name = game.team_name
+            else:
+                team_name = "Unknown Team"
+            return jsonify({'status': 'game_started', 'role': player['role'], 'team': player['team'], 'team_name': team_name}), 200
+        else:
+            return jsonify({'status': 'waiting'}), 200
+
+    except Exception as e:
+        logger.exception(f"An error occurred in wait_for_game_start: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    
+# Get waiting students
+@app.route('/get_waiting_players/<session_id>', methods=['GET'])
+@cross_origin()
+def get_waiting_players(session_id):
+    try:
+        if session_id not in SESSIONS:
+            logger.warning(f"Session {session_id} not found in SESSIONS dictionary")
+            return jsonify({'error': 'Session not found'}), 404
+
+        session_data = db.sessions.find_one({'_id': session_id})
+        if not session_data:
+            logger.warning(f"Session {session_id} not found in database")
+            return jsonify({'error': 'Session data not found in database'}), 404
+
+        players = session_data.get('players', [])
+        waiting_players = [p for p in players if p.get('role') is None or p.get('team') is None]
+
+        return jsonify({'waiting_players': waiting_players}), 200
 
     except pymongo.errors.PyMongoError as e:
         logger.exception(f"A MongoDB error occurred: {str(e)}")
         return jsonify({'error': f'A database error occurred: {str(e)}'}), 500
+    except Exception as e:
+        logger.exception(f"An unexpected error occurred: {str(e)}")
+        return jsonify({'error': f'An unexpected error occurred: {str(e)}'}), 500
+# Assign Roles
+@app.route('/assign_roles/<session_id>', methods=['POST'])
+@cross_origin()
+def assign_roles(session_id):
+    try:
+        if session_id not in SESSIONS:
+            return jsonify({'error': 'Session not found'}), 404
+
+        session = SESSIONS[session_id]
+        
+        # Check if roles have already been assigned
+        session_data = db.sessions.find_one({'_id': session_id})
+        if session_data.get('roles_assigned', False):
+            return jsonify({'error': 'Roles have already been assigned for this session'}), 400
+
+        data = request.json
+        assignments = data.get('assignments', {})
+
+        # Fetch current session data
+        current_players = {p['uid']: p for p in session_data.get('players', [])}
+
+        # Prepare bulk write operations
+        bulk_operations = []
+
+        for player_uid, assignment in assignments.items():
+            new_role = assignment.get('role')
+            new_team = assignment.get('team')
+
+            update = {
+                'players.$.role': new_role,
+                'players.$.team': new_team
+            }
+
+            bulk_operations.append(
+                pymongo.UpdateOne(
+                    {'_id': session_id, 'players.uid': player_uid},
+                    {'$set': update}
+                )
+            )
+
+        # Add operation to set roles_assigned to True
+        bulk_operations.append(
+            pymongo.UpdateOne(
+                {'_id': session_id},
+                {'$set': {'roles_assigned': True}}
+            )
+        )
+
+        # Execute bulk write if there are operations
+        if bulk_operations:
+            db.sessions.bulk_write(bulk_operations)
+
+        # Start or restart the games
+        for game_id in session.games:
+            game = GAMES[game_id]
+            game.start_game()  # Make sure this method properly resets and starts the game
+
+        # Fetch updated session data
+        updated_session_data = db.sessions.find_one({'_id': session_id})
+        updated_players = updated_session_data.get('players', [])
+
+        # Prepare the response data
+        response_data = {
+            'message': 'Roles and teams assigned and games started successfully',
+            'assignments': assignments,
+            'updated_players': updated_players
+        }
+
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        logger.exception(f"An error occurred: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    
+@app.route('/assign_random_roles/<session_id>', methods=['POST'])
+@cross_origin()
+def assign_random_roles(session_id):
+    try:
+        if session_id not in SESSIONS:
+            return jsonify({'error': 'Session not found'}), 404
+
+        session = SESSIONS[session_id]
+        session_data = db.sessions.find_one({'_id': session_id})
+
+        # Check if roles have already been assigned
+        if session_data.get('roles_assigned', False):
+            return jsonify({'error': 'Roles have already been assigned for this session'}), 400
+
+        players = session_data.get('players', [])
+        waiting_players = [p for p in players if p['role'] is None or p['team'] is None]
+
+        # Get available roles and CPU roles from the first game
+        first_game = GAMES[session.games[0]]
+        all_roles = first_game.manual_stations_names + first_game.auto_stations_names
+        cpu_roles = first_game.auto_stations_names
+
+        # Prepare teams and roles
+        teams = session.games
+        roles_per_team = {team: all_roles.copy() for team in teams}
+
+        # Randomly assign roles and teams
+        import random
+        random.shuffle(waiting_players)
+        assignments = {}
+
+        for player in waiting_players:
+            # Find the team with the most available roles
+            team = max(roles_per_team, key=lambda k: len(roles_per_team[k]))
+            
+            # Select a role, prioritizing non-CPU roles
+            available_roles = [r for r in roles_per_team[team] if r not in cpu_roles]
+            if not available_roles:
+                available_roles = roles_per_team[team]
+            
+            role = random.choice(available_roles)
+            
+            assignments[player['uid']] = {'role': role, 'team': team}
+            roles_per_team[team].remove(role)
+
+            # If all roles for a team are assigned, remove the team
+            if not roles_per_team[team]:
+                del roles_per_team[team]
+
+        # Assign remaining roles to CPU
+        for team, roles in roles_per_team.items():
+            for role in roles:
+                assignments[f"CPU_{team}_{role}"] = {'role': role, 'team': team, 'is_cpu': True}
+
+        # Update roles and teams in the database
+        bulk_operations = []
+        for player_uid, assignment in assignments.items():
+            if not player_uid.startswith("CPU_"):
+                bulk_operations.append(
+                    pymongo.UpdateOne(
+                        {'_id': session_id, 'players.uid': player_uid},
+                        {'$set': {
+                            'players.$.role': assignment['role'],
+                            'players.$.team': assignment['team']
+                        }}
+                    )
+                )
+
+        # Add operation to set roles_assigned to True
+        bulk_operations.append(
+            pymongo.UpdateOne(
+                {'_id': session_id},
+                {'$set': {'roles_assigned': True}}
+            )
+        )
+
+        # Execute bulk write
+        if bulk_operations:
+            db.sessions.bulk_write(bulk_operations)
+
+        # Start the game for each team
+        for game_id in session.games:
+            game = GAMES[game_id]
+            game.start_game()
+
+        return jsonify({
+            'message': 'Roles and teams randomly assigned and games started successfully',
+            'assignments': assignments
+        }), 200
+
     except Exception as e:
         logger.exception(f"An error occurred: {str(e)}")
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
@@ -1362,28 +1738,24 @@ def get_session(session_id):
         # First, try to get the session from memory
         if session_id in SESSIONS:
             session = SESSIONS[session_id]
-            return jsonify(session.to_dict()), 200
-
-        # If not in memory, try to fetch from MongoDB
-        session_data = db.sessions.find_one({'_id': session_id})
+            session_data = session.to_dict()
+        else:
+            # If not in memory, try to fetch from MongoDB
+            session_data = db.sessions.find_one({'_id': session_id})
         
         if not session_data:
             return jsonify({'error': 'Session not found'}), 404
 
-        # Create a Session object from the database data
-        session = Session(
-            session_data['name'],
-            session_data['owner_id'],
-            session_data['num_teams']
-        )
-        session.id = session_id
-        session.games = session_data['games']
-        session.players = set(session_data['players'])
+        # Include the roles_assigned variable in the response
+        roles_assigned = session_data.get('roles_assigned', False)
 
-        # Add to memory for future use
-        SESSIONS[session_id] = session
+        # Create a response dictionary with all session data and roles_assigned
+        response_data = {
+            **session_data,
+            'roles_assigned': roles_assigned
+        }
 
-        return jsonify(session.to_dict()), 200
+        return jsonify(response_data), 200
 
     except pymongo.errors.PyMongoError as e:
         logger.exception(f"A MongoDB error occurred: {str(e)}")
@@ -1451,6 +1823,7 @@ def monitor_games(session_id):
     except Exception as e:
         logger.exception(f"An error occurred while monitoring games: {str(e)}")
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    
 # Route to access the monitor function
 @app.route('/monitor_session/<session_id>', methods=['GET'])
 @cross_origin()
@@ -1533,6 +1906,8 @@ def get_lobby_roles_status(session_id):
     except Exception as e:
         logger.exception(f"Error occurred while getting lobby roles status for session {session_id}: {str(e)}")
         return jsonify({'error': f"An error occurred: {str(e)}"}), 500
+    
+    
 import copy
 
 @app.route('/change_session_game_settings', methods=['POST'])
@@ -1736,5 +2111,121 @@ def get_stock_vs_final_demand(game):
         'stock': stock_data,
         'final_demand': final_demand
     }
+
+from flask import send_file
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
+from io import BytesIO
+import os
+
+@app.route('/generate_session_excel/<session_id>', methods=['GET'])
+@cross_origin()
+def generate_session_excel(session_id):
+    try:
+        session = SESSIONS.get(session_id)
+        if not session:
+            return jsonify({'error': 'Session not found'}), 404
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Session Overview"
+
+        # Styles
+        header_font = Font(bold=True)
+        header_fill = PatternFill(start_color="DDDDDD", end_color="DDDDDD", fill_type="solid")
+        
+        # Session Overview
+        ws['A1'] = "Session Name"
+        ws['B1'] = session.name
+        ws['A2'] = "Number of Teams"
+        ws['B2'] = session.num_teams
+
+        # Teams Overview
+        ws['A4'] = "Team Performance Overview"
+        ws['A4'].font = header_font
+        ws.merge_cells('A4:G4')
+
+        headers = ["Team", "Total Cost", "Avg. Fulfillment Rate", "Avg. Green Score", "Current Week"]
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=5, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+
+        row = 6
+        for game_id in session.games:
+            game = GAMES.get(game_id)
+            if game:
+                ws.cell(row=row, column=1, value=game.team_name)
+                ws.cell(row=row, column=2, value=sum(game.kpi_cost['total']))
+                ws.cell(row=row, column=3, value=sum(game.kpi_customer_satisfaction) / len(game.kpi_customer_satisfaction))
+                ws.cell(row=row, column=4, value=sum(game.kpi_green_score) / len(game.kpi_green_score))
+                ws.cell(row=row, column=5, value=game.current_week)
+                row += 1
+
+        # Individual Player Performance
+        for game_id in session.games:
+            game = GAMES.get(game_id)
+            if game:
+                ws = wb.create_sheet(title=f"Team {game.team_name}")
+                
+                ws['A1'] = f"Team {game.team_name} - Player Performance"
+                ws['A1'].font = header_font
+                ws.merge_cells('A1:G1')
+
+                headers = ["Player", "Station", "Total Cost", "Avg. Fulfillment Rate", "Avg. Green Score", "Inventory", "Backorders"]
+                for col, header in enumerate(headers, start=1):
+                    cell = ws.cell(row=2, column=col, value=header)
+                    cell.font = header_font
+                    cell.fill = header_fill
+
+                row = 3
+                for station_name, station in game.network_stations.items():
+                    if not isinstance(station, Demand):  # Skip Demand stations
+                        ws.cell(row=row, column=1, value=station.player_name)
+                        ws.cell(row=row, column=2, value=station_name)
+                        ws.cell(row=row, column=3, value=sum(station.kpi_total_cost))
+                        ws.cell(row=row, column=4, value=sum(station.kpi_fulfilment_rate) / len(station.kpi_fulfilment_rate))
+                        ws.cell(row=row, column=5, value=sum(station.kpi_truck_utilization) / len(station.kpi_truck_utilization))
+                        ws.cell(row=row, column=6, value=station.inventory[-1] if station.inventory else 0)
+                        ws.cell(row=row, column=7, value=sum(station.backorder[customer][-1] for customer in station.backorder))
+                        row += 1
+
+                # Weekly Performance
+                ws['A10'] = "Weekly Performance"
+                ws['A10'].font = header_font
+                ws.merge_cells('A10:G10')
+
+                headers = ["Week", "Cost", "Fulfillment Rate", "Green Score", "Shipments", "Inventory", "Backorders"]
+                for col, header in enumerate(headers, start=1):
+                    cell = ws.cell(row=11, column=col, value=header)
+                    cell.font = header_font
+                    cell.fill = header_fill
+
+                row = 12
+                for week in range(game.current_week):
+                    ws.cell(row=row, column=1, value=week + 1)
+                    ws.cell(row=row, column=2, value=sum(station.kpi_total_cost[week] for station in game.network_stations.values() if not isinstance(station, Demand)))
+                    ws.cell(row=row, column=3, value=sum(station.kpi_fulfilment_rate[week] for station in game.network_stations.values() if not isinstance(station, Demand)) / len(game.network_stations))
+                    ws.cell(row=row, column=4, value=sum(station.kpi_truck_utilization[week] for station in game.network_stations.values() if not isinstance(station, Demand)) / len(game.network_stations))
+                    ws.cell(row=row, column=5, value=sum(station.kpi_shipment_trucks[week] for station in game.network_stations.values() if not isinstance(station, Demand)))
+                    ws.cell(row=row, column=6, value=sum(station.inventory[week] for station in game.network_stations.values() if not isinstance(station, Demand)))
+                    ws.cell(row=row, column=7, value=sum(sum(station.backorder[customer][week] for customer in station.backorder) for station in game.network_stations.values() if not isinstance(station, Demand)))
+                    row += 1
+
+        # Save the workbook
+        excel_file = BytesIO()
+        wb.save(excel_file)
+        excel_file.seek(0)
+
+        return send_file(
+            excel_file,
+            as_attachment=True,
+            download_name=f'session_{session_id}_data.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    except Exception as e:
+        logger.exception(f"An error occurred while generating Excel for session {session_id}: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 load_sessions()

@@ -1,9 +1,9 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import * as api from '../../utils/api';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import * as api from "../../utils/api";
 
 // Game Management Thunks
 export const signUp = createAsyncThunk(
-  'game/signUp',
+  "game/signUp",
   async (idToken, { rejectWithValue }) => {
     try {
       return await api.signUp(idToken);
@@ -14,7 +14,7 @@ export const signUp = createAsyncThunk(
 );
 
 export const signIn = createAsyncThunk(
-  'game/signIn',
+  "game/signIn",
   async (idToken, { rejectWithValue }) => {
     try {
       return await api.signIn(idToken);
@@ -25,7 +25,7 @@ export const signIn = createAsyncThunk(
 );
 
 export const createDemo = createAsyncThunk(
-  'game/createDemo',
+  "game/createDemo",
   async (_, { rejectWithValue }) => {
     try {
       return await api.createDemo();
@@ -36,10 +36,10 @@ export const createDemo = createAsyncThunk(
 );
 
 export const joinStation = createAsyncThunk(
-  'game/joinStation',
-  async ({ selectedGame, playerName, password }, { rejectWithValue }) => {
+  "game/joinStation",
+  async ({ selectedGame, playerName, password, selectedStation }, { rejectWithValue }) => {
     try {
-      return await api.joinStation(selectedGame, playerName, password);
+      return await api.joinStation(selectedGame, playerName, password, selectedStation);
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -47,7 +47,7 @@ export const joinStation = createAsyncThunk(
 );
 
 export const getPlayScreenInfo = createAsyncThunk(
-  'game/getPlayScreenInfo',
+  "game/getPlayScreenInfo",
   async ({ gameId, stationId }, { rejectWithValue }) => {
     try {
       return await api.getPlayScreenInfo(gameId, stationId);
@@ -58,10 +58,19 @@ export const getPlayScreenInfo = createAsyncThunk(
 );
 
 export const submitTurn = createAsyncThunk(
-  'game/submitTurn',
-  async ({ gameId, stationId, week, suppliers, customers }, { rejectWithValue }) => {
+  "game/submitTurn",
+  async (
+    { gameId, stationId, week, suppliers, customers },
+    { rejectWithValue }
+  ) => {
     try {
-      return await api.submitTurn(gameId, stationId, week, suppliers, customers);
+      return await api.submitTurn(
+        gameId,
+        stationId,
+        week,
+        suppliers,
+        customers
+      );
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -69,7 +78,7 @@ export const submitTurn = createAsyncThunk(
 );
 
 export const getStationStatus = createAsyncThunk(
-  'game/getStationStatus',
+  "game/getStationStatus",
   async ({ gameId, stationId }, { rejectWithValue }) => {
     try {
       return await api.getStationStatus(gameId, stationId);
@@ -80,7 +89,7 @@ export const getStationStatus = createAsyncThunk(
 );
 
 export const getGameStatus = createAsyncThunk(
-  'game/getGameStatus',
+  "game/getGameStatus",
   async ({ gameId, stationId }, { rejectWithValue }) => {
     try {
       return await api.getGameStatus(gameId, stationId);
@@ -91,7 +100,7 @@ export const getGameStatus = createAsyncThunk(
 );
 
 export const getGameSetup = createAsyncThunk(
-  'game/getGameSetup',
+  "game/getGameSetup",
   async (gameId, { rejectWithValue }) => {
     try {
       return await api.getGameSetup(gameId);
@@ -102,8 +111,8 @@ export const getGameSetup = createAsyncThunk(
 );
 
 export const saveGameSetup = createAsyncThunk(
-  'game/saveGameSetup',
-  async ({gameId, gameData}, { rejectWithValue }) => {
+  "game/saveGameSetup",
+  async ({ gameId, gameData }, { rejectWithValue }) => {
     try {
       return await api.saveGameSetup(gameId, gameData);
     } catch (error) {
@@ -113,7 +122,7 @@ export const saveGameSetup = createAsyncThunk(
 );
 
 export const createGameFromTemplate = createAsyncThunk(
-  'game/createGameFromTemplate',
+  "game/createGameFromTemplate",
   async (templateName, { rejectWithValue }) => {
     try {
       return await api.createGameFromTemplate(templateName);
@@ -124,7 +133,7 @@ export const createGameFromTemplate = createAsyncThunk(
 );
 
 export const getGameTemplates = createAsyncThunk(
-  'game/getGameTemplates',
+  "game/getGameTemplates",
   async (_, { rejectWithValue }) => {
     try {
       return await api.getGameTemplates();
@@ -135,7 +144,7 @@ export const getGameTemplates = createAsyncThunk(
 );
 
 export const copyGame = createAsyncThunk(
-  'game/copyGame',
+  "game/copyGame",
   async ({ originalGameId, newGameName }, { rejectWithValue }) => {
     try {
       return await api.copyGame(originalGameId, newGameName);
@@ -146,7 +155,7 @@ export const copyGame = createAsyncThunk(
 );
 
 export const renameGame = createAsyncThunk(
-  'game/renameGame',
+  "game/renameGame",
   async ({ gameId, newName }, { rejectWithValue }) => {
     try {
       return await api.renameGame(gameId, newName);
@@ -157,7 +166,7 @@ export const renameGame = createAsyncThunk(
 );
 
 export const deleteGame = createAsyncThunk(
-  'game/deleteGame',
+  "game/deleteGame",
   async (gameId, { rejectWithValue }) => {
     try {
       return await api.deleteGame(gameId);
@@ -168,7 +177,7 @@ export const deleteGame = createAsyncThunk(
 );
 
 export const resetGame = createAsyncThunk(
-  'game/resetGame',
+  "game/resetGame",
   async (gameId, { rejectWithValue }) => {
     try {
       return await api.resetGame(gameId);
@@ -180,7 +189,7 @@ export const resetGame = createAsyncThunk(
 
 // Session Management Thunks
 export const createSession = createAsyncThunk(
-  'game/createSession',
+  "game/createSession",
   async ({ name, userId, teams, playersPerTeam }, { rejectWithValue }) => {
     try {
       return await api.createSession(name, userId, teams, playersPerTeam);
@@ -191,7 +200,7 @@ export const createSession = createAsyncThunk(
 );
 
 export const getSessions = createAsyncThunk(
-  'game/getSessions',
+  "game/getSessions",
   async (_, { rejectWithValue }) => {
     try {
       return await api.getSessions();
@@ -202,7 +211,7 @@ export const getSessions = createAsyncThunk(
 );
 
 export const getSession = createAsyncThunk(
-  'game/getSession',
+  "game/getSession",
   async (sessionId, { rejectWithValue }) => {
     try {
       return await api.getSession(sessionId);
@@ -213,7 +222,7 @@ export const getSession = createAsyncThunk(
 );
 
 export const updateSession = createAsyncThunk(
-  'game/updateSession',
+  "game/updateSession",
   async ({ sessionId, updateData }, { rejectWithValue }) => {
     try {
       return await api.updateSession(sessionId, updateData);
@@ -224,7 +233,7 @@ export const updateSession = createAsyncThunk(
 );
 
 export const deleteSession = createAsyncThunk(
-  'game/deleteSession',
+  "game/deleteSession",
   async (sessionId, { rejectWithValue }) => {
     try {
       return await api.deleteSession(sessionId);
@@ -234,19 +243,19 @@ export const deleteSession = createAsyncThunk(
   }
 );
 
-export const joinSession = createAsyncThunk(
-  'game/joinSession',
-  async ({ sessionId, playerName }, { rejectWithValue }) => {
-    try {
-      return await api.joinSession(sessionId, playerName);
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
+// export const joinSession = createAsyncThunk(
+//   "game/joinSession",
+//   async ({ sessionId, playerName }, { rejectWithValue }) => {
+//     try {
+//       return await api.joinSession(sessionId, playerName);
+//     } catch (error) {
+//       return rejectWithValue(error.message);
+//     }
+//   }
+// );
 
 export const getSessionStatus = createAsyncThunk(
-  'game/getSessionStatus',
+  "game/getSessionStatus",
   async (sessionId, { rejectWithValue }) => {
     try {
       return await api.getSessionStatus(sessionId);
@@ -257,7 +266,7 @@ export const getSessionStatus = createAsyncThunk(
 );
 
 export const getTeamDetails = createAsyncThunk(
-  'game/getTeamDetails',
+  "game/getTeamDetails",
   async ({ sessionId, teamId }, { rejectWithValue }) => {
     try {
       return await api.getTeamDetails(sessionId, teamId);
@@ -267,9 +276,8 @@ export const getTeamDetails = createAsyncThunk(
   }
 );
 
-
 export const getSessionTeams = createAsyncThunk(
-  'game/getSessionTeams',
+  "game/getSessionTeams",
   async (sessionId, { rejectWithValue }) => {
     try {
       return await api.getSessionTeams(sessionId);
@@ -280,7 +288,7 @@ export const getSessionTeams = createAsyncThunk(
 );
 
 export const getLobbyRolesStatus = createAsyncThunk(
-  'game/getLobbyRolesStatus',
+  "game/getLobbyRolesStatus",
   async (sessionId, { rejectWithValue }) => {
     try {
       return await api.getLobbyRolesStatus(sessionId);
@@ -291,7 +299,7 @@ export const getLobbyRolesStatus = createAsyncThunk(
 );
 
 export const getSessionGameSettings = createAsyncThunk(
-  'game/getSessionGameSettings',
+  "game/getSessionGameSettings",
   async (sessionId, { rejectWithValue }) => {
     try {
       return await api.getSessionGameSettings(sessionId);
@@ -302,8 +310,8 @@ export const getSessionGameSettings = createAsyncThunk(
 );
 
 export const changeSessionGameSettings = createAsyncThunk(
-  'game/changeSessionGameSettings',
-  async ({sessionId, setupData}, { rejectWithValue }) => {
+  "game/changeSessionGameSettings",
+  async ({ sessionId, setupData }, { rejectWithValue }) => {
     try {
       return await api.changeSessionGameSettings(sessionId, setupData);
     } catch (error) {
@@ -313,7 +321,7 @@ export const changeSessionGameSettings = createAsyncThunk(
 );
 
 export const getSessionAnalysis = createAsyncThunk(
-  'game/getSessionAnalysis',
+  "game/getSessionAnalysis",
   async (sessionId, { rejectWithValue }) => {
     try {
       return await api.getSessionAnalysis(sessionId);
@@ -323,8 +331,63 @@ export const getSessionAnalysis = createAsyncThunk(
   }
 );
 
+export const getWaitingPlayers = createAsyncThunk(
+  "game/getWaitingPlayers",
+  async (sessionId, { rejectWithValue }) => {
+    try {
+      return await api.getWaitingPlayers(sessionId);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const assignRoles = createAsyncThunk(
+  "game/assignRoles",
+  async ({ sessionId, assignments }, { rejectWithValue }) => {
+    try {
+      return await api.assignRoles(sessionId, assignments);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const assignRandomRoles = createAsyncThunk(
+  "game/assignRandomRoles",
+  async (sessionId, { rejectWithValue }) => {
+    try {
+      return await api.assignRandomRoles(sessionId);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const joinSession = createAsyncThunk(
+  'game/joinSession',
+  async ({ sessionId, playerUID, playerName }, { rejectWithValue }) => {
+    try {
+      return await api.joinSession(sessionId, playerName, playerUID);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const waitForGameStart = createAsyncThunk(
+  'game/waitForGameStart',
+  async ({ sessionId, playerUid }, { rejectWithValue }) => {
+    try {
+      return await api.waitForGameStart(sessionId, playerUid);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 const gameSlice = createSlice({
-  name: 'game',
+  name: "game",
   initialState: {
     user: null,
     gameData: null,
@@ -343,6 +406,12 @@ const gameSlice = createSlice({
     currentTeam: null,
     lobbyRolesStatus: null,
     sessionGameSettings: null,
+    waitingPlayers: null,
+    lobbyRolesStatus: null,
+    lobbyRolesStatus: null,
+    playerRole: null,
+    joinedSession: false,
+    gameStarted: false,
   },
   reducers: {
     // You can add any synchronous actions here
@@ -387,11 +456,12 @@ const gameSlice = createSlice({
       .addCase(joinStation.fulfilled, (state, action) => {
         state.loading = false;
         state.stationData = action.payload;
+        state.playScreenInfo = action.payload.game_info;
       })
-      .addCase(getPlayScreenInfo.fulfilled, (state, action) => {
-        state.loading = false;
-        state.playScreenInfo = action.payload;
-      })
+      // .addCase(getPlayScreenInfo.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.playScreenInfo = action.payload;
+      // })
       .addCase(submitTurn.fulfilled, (state, action) => {
         state.loading = false;
         // Update game state based on turn submission if needed
@@ -416,7 +486,7 @@ const gameSlice = createSlice({
       })
       .addCase(getGameSetup.fulfilled, (state, action) => {
         state.loading = false;
-        state.gameSetup = action.payload;
+        state.gameSetup = action.payload.setup;
       })
       .addCase(getGameSetup.rejected, (state, action) => {
         state.loading = false;
@@ -427,7 +497,7 @@ const gameSlice = createSlice({
       })
       .addCase(saveGameSetup.fulfilled, (state, action) => {
         state.loading = false;
-        state.gameSetup = action.payload;
+        state.gameSetup = action.payload.setup;
       })
       .addCase(saveGameSetup.rejected, (state, action) => {
         state.loading = false;
@@ -483,15 +553,20 @@ const gameSlice = createSlice({
       })
       .addCase(deleteSession.fulfilled, (state, action) => {
         state.loading = false;
-        state.sessions = state.sessions.filter(session => session.id !== action.payload);
-        if (state.currentSession && state.currentSession.id === action.payload) {
+        state.sessions = state.sessions.filter(
+          (session) => session.id !== action.payload
+        );
+        if (
+          state.currentSession &&
+          state.currentSession.id === action.payload
+        ) {
           state.currentSession = null;
         }
       })
-      .addCase(joinSession.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentSession = action.payload.session;
-      })
+      // .addCase(joinSession.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.currentSession = action.payload.session;
+      // })
       .addCase(getSessionStatus.fulfilled, (state, action) => {
         state.loading = false;
         state.sessionStatus = action.payload;
@@ -547,9 +622,48 @@ const gameSlice = createSlice({
       .addCase(getSessionAnalysis.rejected, (state, action) => {
         // state.loading = false;
         state.error = action.payload;
-      });
+      })
+      // Add these to the extraReducers in gameSlice.js
+      .addCase(getWaitingPlayers.fulfilled, (state, action) => {
+        state.waitingPlayers = action.payload;
+      })
+      .addCase(assignRoles.fulfilled, (state, action) => {
+        // Update the lobby roles status after assigning roles
+        state.lobbyRolesStatus = action.payload;
+      })
+      .addCase(assignRandomRoles.fulfilled, (state, action) => {
+        // Update the lobby roles status after assigning random roles
+        state.lobbyRolesStatus = action.payload;
+      })
+      .addCase(joinSession.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(joinSession.fulfilled, (state, action) => {
+        state.loading = false;
+        state.joinedSession = true;
+        state.error = null;
+      })
+      .addCase(joinSession.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(waitForGameStart.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(waitForGameStart.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.status === 'game_started') {
+          state.gameStarted = true;
+          state.playerRole = action.payload.role;
+        }
+        state.error = null;
+      })
+      .addCase(waitForGameStart.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
   },
 });
-
 
 export default gameSlice.reducer;

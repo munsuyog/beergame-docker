@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { joinStation, getPlayScreenInfo } from "../../store/reducers/gameSlice";
+import { joinStation } from "../../store/reducers/gameSlice";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 
@@ -18,12 +18,7 @@ const Modal1 = ({ setName, onClose }) => {
           selectedGame: gameData.team_name,
           playerName: gameData.player_name,
           password: gameData.play_password,
-        })
-      );
-      dispatch(
-        getPlayScreenInfo({
-          gameId: gameData.team_name,
-          stationId: gameData.selected_station,
+          selectedStation: gameData.selected_station,
         })
       );
       onClose();
@@ -33,9 +28,9 @@ const Modal1 = ({ setName, onClose }) => {
           selectedGame: gameId,
           playerName: playerName,
           password: "play",
+          selectedStation: role 
         })
       );
-      dispatch(getPlayScreenInfo({ gameId: gameId, stationId: role }));
       onClose();
     }
   };

@@ -16,6 +16,7 @@ import {
 import { getGameStatus, getSessionAnalysis } from "../../../store/reducers/gameSlice";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaChartLine, FaChartBar, FaSync } from "react-icons/fa";
+import DownloadExcelButton from "./DownloadBtn";
 
 ChartJS.register(
   CategoryScale,
@@ -311,6 +312,7 @@ const Results = () => {
               </option>
             ))}
           </select>
+          <DownloadExcelButton sessionId={sessionId} />
           <div className="flex flex-wrap gap-2">
             {teamTabs.map((tab) => (
               <motion.button

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { MdOutlineZoomInMap, MdOutlineZoomOutMap } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
+import { useNavigate, useParams } from "react-router-dom";
 
 const Round1 = ({ sessionData, status, teams }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -94,6 +95,9 @@ const Round1 = ({ sessionData, status, teams }) => {
 
 const Table = ({ teams }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const navigate = useNavigate();
+  const {sessionId} = useParams();
+
 
   const sortedTeams = React.useMemo(() => {
     let sortableTeams = [...teams];
@@ -131,7 +135,7 @@ const Table = ({ teams }) => {
       <table className="w-full text-sm text-left text-gray-700">
         <thead className="text-xs text-gray-700 uppercase bg-gray-100">
           <tr>
-            {['Team Name', 'Status', 'Players', 'Orders', 'Cost'].map((header) => (
+            {['Team Name', 'Status', 'Players', 'Orders', 'Cost', ''].map((header) => (
               <th 
                 key={header} 
                 scope="col" 
@@ -168,6 +172,9 @@ const Table = ({ teams }) => {
                 <td className="px-6 py-4">{team.players || 0}</td>
                 <td className="px-6 py-4">{team.orders || 0}</td>
                 <td className="px-6 py-4 font-medium text-[#e86234]">${team.cost || 0}</td>
+                <td className="px-6 py-4">
+                  <button onClick={() => navigate(`/session/${sessionId}/settings/${team.team_name}`)}>Settings</button>
+                </td>
               </motion.tr>
             ))}
           </AnimatePresence>

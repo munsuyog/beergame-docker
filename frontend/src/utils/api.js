@@ -1,5 +1,7 @@
 // api.js
-const API_BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL
+  : "http://localhost:8000";
 
 const handleResponse = async (response) => {
   console.log(response);
@@ -38,14 +40,15 @@ export const createDemo = () =>
     method: "GET",
   }).then(handleResponse);
 
-export const joinStation = (selectedGame, playerName, password) =>
-  fetch(`${API_BASE_URL}/join_station`, {
+export const joinStation = (selectedGame, playerName, password, selectedStation) =>
+  fetch(`${API_BASE_URL}/join_and_play`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       selected_game: selectedGame,
       player_name: playerName,
       password: password,
+      selected_station: selectedStation
     }),
   }).then(handleResponse);
 
@@ -87,14 +90,13 @@ export const getStationStatus = (gameId, stationId) =>
     }
   ).then(handleResponse);
 
-  export const getGameSetup = (gameId) =>
-    fetch(`${API_BASE_URL}/edit_game_setup?game=${gameId}&action=edit`, {
-      method: "GET",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    .then(handleResponse);
+export const getGameSetup = (gameId) =>
+  fetch(`${API_BASE_URL}/edit_game_setup?game=${gameId}&action=edit`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }).then(handleResponse);
 
 export const saveGameSetup = (gameId, setupData) =>
   fetch(`${API_BASE_URL}/change_game_settings?game=${gameId}`, {
@@ -175,7 +177,12 @@ export const createSession = (name, userId, teams, playersPerTeam) =>
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ session_name: name, user_id: userId, num_teams: teams, playersPerTeam }),
+    body: JSON.stringify({
+      session_name: name,
+      user_id: userId,
+      num_teams: teams,
+      playersPerTeam,
+    }),
   }).then(handleResponse);
 
 export const getSessions = () =>
@@ -202,14 +209,14 @@ export const deleteSession = (sessionId) =>
     method: "DELETE",
   }).then(handleResponse);
 
-export const joinSession = (sessionId, playerName) =>
-  fetch(`${API_BASE_URL}/join_session`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ session_id: sessionId, player_name: playerName }),
-  }).then(handleResponse);
+// export const joinSession = (sessionId, playerName) =>
+//   fetch(`${API_BASE_URL}/join_session`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({ session_id: sessionId, player_name: playerName }),
+//   }).then(handleResponse);
 
 export const getSessionStatus = (sessionId) =>
   fetch(`${API_BASE_URL}/monitor_session/${sessionId}`, {
@@ -230,17 +237,16 @@ export const getLobbyRolesStatus = (sessionId) =>
   fetch(`${API_BASE_URL}/session/lobby/${sessionId}`, {
     method: "GET",
   }).then(handleResponse);
-  
+
 // Export all functions
 
 export const getSessionGameSettings = (sessionId) =>
   fetch(`${API_BASE_URL}/get_session_game_settings?session=${sessionId}`, {
     method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-  })
-  .then(handleResponse);
+  }).then(handleResponse);
 
 export const changeSessionGameSettings = (sessionId, setupData) =>
   fetch(`${API_BASE_URL}/change_session_game_settings?session=${sessionId}`, {
@@ -253,5 +259,38 @@ export const changeSessionGameSettings = (sessionId, setupData) =>
 
 export const getSessionAnalysis = (sessionId) =>
   fetch(`${API_BASE_URL}/get_session_analysis/${sessionId}`, {
+    method: "GET",
+  }).then(handleResponse);
+
+export const getWaitingPlayers = (sessionId) =>
+  fetch(`${API_BASE_URL}/get_waiting_players/${sessionId}`, {
+    method: "GET",
+  }).then(handleResponse);
+
+export const assignRoles = (sessionId, assignments) =>
+  fetch(`${API_BASE_URL}/assign_roles/${sessionId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ assignments }),
+  }).then(handleResponse);
+
+export const assignRandomRoles = (sessionId) =>
+  fetch(`${API_BASE_URL}/assign_random_roles/${sessionId}`, {
+    method: "POST",
+  }).then(handleResponse);
+
+export const joinSession = (sessionId, playerName, playerUID) =>
+  fetch(`${API_BASE_URL}/join_session/${sessionId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ player_uid: playerUID ,player_name: playerName }),
+  }).then(handleResponse);
+
+export const waitForGameStart = (sessionId, playerUid) =>
+  fetch(`${API_BASE_URL}/wait_for_game_start/${sessionId}/${playerUid}`, {
     method: "GET",
   }).then(handleResponse);

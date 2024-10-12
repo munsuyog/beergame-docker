@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import tv from "../../../assets/Game/tv.png";
-import { joinStation, getPlayScreenInfo } from "../../../store/reducers/gameSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const Step4 = ({ setCurrentStep, onClose }) => {

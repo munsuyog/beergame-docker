@@ -33,6 +33,7 @@ const Header = ({ active, setActive, openSettings, noButton }) => {
     { id: 2, name: "Follow-up", icon: FaUserFriends },
     { id: 3, name: "Results", icon: FaStar },
     { id: 4, name: "Settings", icon: MdSettings },
+    { id: 5, name: "Lobby Management", icon: MdSettings },
   ];
 
   return (

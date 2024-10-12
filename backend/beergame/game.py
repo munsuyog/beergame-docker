@@ -106,6 +106,26 @@ class Game(object):
             self.network_stations[x].initialize_week(0)
         self.save_to_mongodb()
 
+    def start_game(self):
+        self.current_week = 0
+        self.game_done = False
+        self.turn_start_time = time.time()
+        self.players_completed_turn = 0
+
+        # Reset KPIs
+        self.kpi_customer_satisfaction = [0] * self.weeks
+        self.kpi_green_score = [0] * self.weeks
+        self.kpi_cost = {'inventory':[0] * self.weeks, 'backorder':[0] * self.weeks, 'transport':[0] * self.weeks, 'total':[0] * self.weeks}
+        self.kpi_trucks = [0] * self.weeks
+
+        # Initialize the first week for all stations
+        for station_name in self.network_walk:
+            self.network_stations[station_name].reset()
+            self.network_stations[station_name].initialize_week(0)
+
+        # Update the game status in the database
+        self.update_mongodb()
+
     def save_to_mongodb(self):
         game_data = self.get_config()
         try:

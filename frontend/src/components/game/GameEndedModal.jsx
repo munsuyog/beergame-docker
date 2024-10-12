@@ -1,5 +1,4 @@
 import { useDispatch, useSelector } from "react-redux";
-import { joinStation, getPlayScreenInfo } from "../../store/reducers/gameSlice";
 import { Link, useParams } from "react-router-dom";
 import { useState } from "react";
 
