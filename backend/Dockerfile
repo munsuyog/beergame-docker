@@ -11,7 +11,7 @@ COPY . /app
 RUN pip install --no-cache-dir .
 
 # Install MongoDB driver (pymongo)
-RUN pip install --no-cache-dir pymongo
+RUN pip install --no-cache-dir pymongo openpyxl
 
 # Make port 5555 available to the world outside this container
 EXPOSE 5555
