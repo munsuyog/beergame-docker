@@ -5,7 +5,6 @@ import { useState } from "react";
 const GameEndedModal = () => {
   const dispatch = useDispatch();
   const { gameId, role, demo } = useParams();
-  console.log(gameId);
 
   const [playerName, setPlayerName] = useState("");
 

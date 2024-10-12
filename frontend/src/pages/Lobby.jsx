@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from 'react-redux';
 const Lobby = () => {
   const lobbyRolesStatus = useSelector((state) => state.game.lobbyRolesStatus);
   const currentSession = useSelector((state) => state.game.currentSession);
-  console.log(currentSession)
   const user = useSelector((state) => state.user.user);
   const { sessionId } = useParams();
   const dispatch = useDispatch();

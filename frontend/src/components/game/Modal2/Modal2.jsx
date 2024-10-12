@@ -11,8 +11,6 @@ const Modal2 = ({ onClose }) => {
   // const setShowStep3 = () => setCurrentStep(3);
   // const setShowStep4 = () => setCurrentStep(4);
 
-  console.log(currentStep)
-
   return (
     <div>
       {currentStep === 1 && (

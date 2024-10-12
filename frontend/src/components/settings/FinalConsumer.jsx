@@ -87,8 +87,7 @@ const FinalConsumer = () => {
   
   
   const res =  generateData()
-  
-  console.log({res})
+
 
   const numbers1 = manualUpdate; // Use manualUpdate for the chart data
 

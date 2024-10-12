@@ -10,7 +10,6 @@ const Step4 = ({ setCurrentStep, onClose }) => {
   const dispatch = useDispatch();
   const {gameId, role, demo} = useParams();
   const {gameData} = useSelector((state) => state.game)
-  console.log(gameData)
   
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);

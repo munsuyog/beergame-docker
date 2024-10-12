@@ -25,7 +25,6 @@ const MetricCard = ({ title, value, icon: Icon, color, info }) => (
 
 const VariabilityAndLeadTimes = ({ gameStatus }) => {
   const [variabilityData, setVariabilityData] = useState({});
-  console.log(variabilityData)
   const [leadTimeData, setLeadTimeData] = useState({});
 
   useEffect(() => {

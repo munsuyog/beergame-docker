@@ -27,7 +27,6 @@ const Game = ({ move1, setMove1, handleToggleModal }) => {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showGameEndedModal, setShowGameEndedModal] = useState(false);
   const location = useLocation();
-  console.log(location);
   const queryParams = new URLSearchParams(location.search);
   const selected_station = queryParams.get("selected_station");
   const {
@@ -180,7 +179,6 @@ const Game = ({ move1, setMove1, handleToggleModal }) => {
     e.preventDefault();
     const inputName = e.target.elements.name.value;
     setName(inputName);
-    console.log(inputName);
     setIsModalOpen(false);
   };
 
@@ -208,13 +206,6 @@ const Game = ({ move1, setMove1, handleToggleModal }) => {
     dispatch(
       submitTurn({ gameId: game_id, stationId, week, suppliers, customers })
     );
-    console.log("Turn submitted successfully:", {
-      gameId,
-      stationId,
-      week,
-      suppliers,
-      customers,
-    });
     setHasSubmitted(true);
     boatMovedRef.current = false;
   };
@@ -417,8 +408,7 @@ const Game = ({ move1, setMove1, handleToggleModal }) => {
       moveBoat();
     }
   }, [move1]);
-
-  console.log(reset);
+ 
   return (
     <div className="w-full flex justify-center items-center">
       <Map />

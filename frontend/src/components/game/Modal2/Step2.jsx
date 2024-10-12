@@ -3,7 +3,6 @@ import manufacturer from "../../../assets/Game/manufacturer.png";
 
 const Step2 = ({ setCurrentStep }) => {
   const {playScreenInfo} = useSelector((state) => state.game);
-  console.log(playScreenInfo)
   return (
     <div
       id="default-modal"

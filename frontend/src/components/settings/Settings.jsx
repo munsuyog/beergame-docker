@@ -57,7 +57,6 @@ const GameSetup = () => {
   ]);
   const [open, setOpen] = useState(false);
   const [newScriptItem, setNewScriptItem] = useState({ week: "", msg: "" });
-  console.log("local", sessionGameSettings);
   useEffect(() => {
     if (!sessionGameSettings) {
       dispatch(getSessionGameSettings(sessionId));

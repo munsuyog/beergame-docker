@@ -24,7 +24,6 @@ const GameScreen = ({ name, setName, setShowModal1 }) => {
   const dispatch = useDispatch();
 
   const { stationStatus, gameStatus } = useSelector((state) => state.game);
-  console.log("Game Screen status", gameStatus)
   const { gameId, role } = useParams();
 
   useEffect(() => {

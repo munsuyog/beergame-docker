@@ -7,7 +7,6 @@ const Modal1 = ({ setName, onClose }) => {
   const { gameData } = useSelector((state) => state.game);
   const dispatch = useDispatch();
   const { gameId, role, demo } = useParams();
-  console.log(gameId);
 
   const [playerName, setPlayerName] = useState("");
 

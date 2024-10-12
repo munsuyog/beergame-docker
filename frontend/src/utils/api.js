@@ -4,7 +4,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL
   : "http://localhost:8000";
 
 const handleResponse = async (response) => {
-  console.log(response);
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || "An error occurred");

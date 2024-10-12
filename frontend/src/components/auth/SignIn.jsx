@@ -35,13 +35,10 @@ const SignIn = () => {
     const studentSnapshot = await getDoc(studentDoc);
     const instructorSnapshot = await getDoc(instructorDoc);
     if (studentSnapshot.exists()) {
-      console.log("User is a student");
       return "student";
     } else if (instructorSnapshot.exists()) {
-      console.log("User is an instructor");
       return "instructor";
     } else {
-      console.log("User not found in students or instructors");
       return null;
     }
   };

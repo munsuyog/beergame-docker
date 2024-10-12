@@ -3,7 +3,6 @@ import homes from "../../../assets/Game/homes.png";
 
 const Step1 = ({ onClose, setCurrentStep }) => {
   const {playScreenInfo, stationData, gameData} = useSelector((state) => state.game)
-  console.log(playScreenInfo, stationData)
   return (
     <div
       id="default-modal"
