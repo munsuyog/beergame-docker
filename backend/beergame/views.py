@@ -2117,7 +2117,6 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from io import BytesIO
 import os
-
 @app.route('/generate_session_excel/<session_id>', methods=['GET'])
 @cross_origin()
 def generate_session_excel(session_id):
@@ -2240,6 +2239,29 @@ def generate_session_excel(session_id):
                     ws.cell(row=row, column=7, value=sum(sum(station.backorder[customer][week] for customer in station.backorder) for station in game.network_stations.values() if not isinstance(station, Demand)))
                     row += 1
 
+        # Add Parameter Definitions Sheet
+        definitions_sheet = wb.create_sheet(title="Parameter Definitions")
+        definitions_sheet['A1'] = "Parameter Definitions"
+        definitions_sheet['A1'].font = header_font
+        definitions_sheet.merge_cells('A1:B1')
+
+        definitions = [
+            ("Orders", "The number of units ordered by a station from its suppliers in a given week."),
+            ("Shipments", "The number of units shipped by a station to its customers in a given week."),
+            ("Inventory", "The number of units in stock at a station at the end of a given week."),
+            ("Backorders", "The number of unfulfilled orders at a station at the end of a given week."),
+            ("Cost", "The total cost incurred by a station in a given week, including holding, backorder, and transportation costs."),
+            ("Fulfillment Rate", "The percentage of customer demand satisfied by a station in a given week."),
+            ("Green Score", "A measure of transportation efficiency, based on how well trucks are utilized for shipments."),
+            ("Total Cost", "The cumulative cost incurred by a station or team over the course of the game."),
+            ("Avg. Fulfillment Rate", "The average percentage of customer demand satisfied over the course of the game."),
+            ("Avg. Green Score", "The average transportation efficiency score over the course of the game."),
+        ]
+
+        for row, (param, definition) in enumerate(definitions, start=2):
+            definitions_sheet.cell(row=row, column=1, value=param).font = Font(bold=True)
+            definitions_sheet.cell(row=row, column=2, value=definition)
+
         # Save the workbook
         excel_file = BytesIO()
         wb.save(excel_file)
@@ -2255,5 +2277,5 @@ def generate_session_excel(session_id):
     except Exception as e:
         logger.exception(f"An error occurred while generating Excel for session {session_id}: {str(e)}")
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-    
+        
 load_sessions()

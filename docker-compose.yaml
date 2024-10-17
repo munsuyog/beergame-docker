@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   frontend:
     build:
@@ -37,6 +36,18 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+
+  docusaurus:
+    build:
+      context: ./docs
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./docs:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
 
 volumes:
   mongodb_data:
